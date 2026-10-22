@@ -83,6 +83,11 @@
 
     <section id="viewer">
       <div id="viewer-tools">
+        <div id="pdf-tools" class="pdf-tools hidden">
+          <button id="btn-pdf-prev" title="Página anterior (PgUp)">◀</button>
+          <span id="pdf-page-indicator">1 / 1</span>
+          <button id="btn-pdf-next" title="Próxima página (PgDn)">▶</button>
+        </div>
         <button id="btn-fit" title="Adequar à tela (Reset Zoom)">⛶</button>
         <button id="btn-bg" title="Alternar fundo (Xadrez escuro / Xadrez claro / Branco / Preto)">▦</button>
         <button id="btn-zoom-in" title="Aumentar zoom">+</button>
@@ -130,6 +135,10 @@
         <img src="../../icons/Adobe-Photoshop.png" alt="" class="filter-icon" />
         <span>PSD</span>
       </button>
+      <button data-filter="pdf">
+        <img src="../../icons/Docs.png" alt="" class="filter-icon" />
+        <span>PDF</span>
+      </button>
       <button data-filter="video">
         <img src="../../icons/Clip-Appearance.png" alt="" class="filter-icon" />
         <span>Videos</span>
@@ -138,12 +147,14 @@
 
     <section id="files" class="panel">
       <div id="files-bar">
-        <img src="../../icons/Camada 3.png" alt="Alternar exibição" id="toggle-view" class="view-toggle-icon" />
+        <button id="toggle-view" class="view-toggle-btn" title="Modo de exibição: Múltiplas Colunas (clique para Lista linear)" aria-label="Alternar exibição">
+          <img id="toggle-view-img" src="../../icons/ON.png" alt="Alternar exibição" class="toggle-view-icon" />
+        </button>
         <button id="btn-up" title="Subir um nível">↑</button>
         <span id="crumb"></span>
         <span id="count"></span>
       </div>
-      <div id="file-list"></div>
+      <div id="file-list" class="view-columns"></div>
     </section>
   </main>
 

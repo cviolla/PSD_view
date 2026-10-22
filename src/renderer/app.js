@@ -5,10 +5,12 @@
 const IMG = ['jpg','jpeg','png','gif','bmp','webp','svg','ico','avif','tif','tiff'];
 const VID = ['mp4','webm','mov','mkv','avi','m4v','ogv','wmv','flv'];
 const PSD = ['psd','psb'];
+const PDF = ['pdf'];
 
 const iconPaths = {
   dir: '../../icons/Opened-Folder.png',
   psd: '../../icons/Adobe-Photoshop.png',
+  pdf: '../../icons/Docs.png',
   image: '../../icons/Picture.png',
   video: '../../icons/Clip-Appearance.png',
   other: '../../icons/Docs.png'
@@ -16,7 +18,7 @@ const iconPaths = {
 
 const $ = (id) => document.getElementById(id);
 const ext = (n) => (n.includes('.') ? n.split('.').pop().toLowerCase() : '');
-const kind = (f) => f.isDir ? 'dir' : PSD.includes(ext(f.name)) ? 'psd' : IMG.includes(ext(f.name)) ? 'image' : VID.includes(ext(f.name)) ? 'video' : 'other';
+const kind = (f) => f.isDir ? 'dir' : PSD.includes(ext(f.name)) ? 'psd' : PDF.includes(ext(f.name)) ? 'pdf' : IMG.includes(ext(f.name)) ? 'image' : VID.includes(ext(f.name)) ? 'video' : 'other';
 const fileUrl = (p) => 'file:///' + encodeURI(p.replace(/\\/g, '/')).replace(/#/g, '%23');
 const fmtSize = (b) => b >= 1073741824 ? (b / 1073741824).toFixed(2) + ' GB' : b >= 1048576 ? (b / 1048576).toFixed(2) + ' MB' : (b / 1024).toFixed(2) + ' KB';
 const fmtGB = (b) => (b / 1073741824).toFixed(1) + ' GB';
@@ -37,7 +39,10 @@ const state = {
   favs: store.get('favs', []), 
   nav: { rot: 0, zoom: 1, x: 0, y: 0 }, 
   token: 0,
-  viewCols: 3
+  viewMode: store.get('viewMode', 'columns'),
+  pdfDoc: null,
+  pdfPage: 1,
+  pdfTotalPages: 1
 };
 
 /* ---------- Janela / Tema ---------- */
@@ -180,11 +185,34 @@ $('btn-fav').onclick = () => {
   updateFavBtn();
 };
 
-/* ---------- Alternância de Visualização da Lista ---------- */
-$('toggle-view').onclick = () => {
-  state.viewCols = state.viewCols === 3 ? 4 : state.viewCols === 4 ? 2 : 3;
-  $('file-list').style.columns = `${state.viewCols} 220px`;
-};
+/* ---------- Alternância de Visualização da Lista (Colunas / Lista) ---------- */
+function applyViewMode(mode) {
+  state.viewMode = mode;
+  store.set('viewMode', mode);
+  const fl = $('file-list');
+  const btn = $('toggle-view');
+  const img = $('toggle-view-img');
+  if (!fl || !btn) return;
+
+  if (mode === 'list') {
+    fl.classList.remove('view-columns');
+    fl.classList.add('view-list');
+    if (img) img.src = '../../icons/OFF.png';
+    btn.title = 'Modo de exibição: Lista linear (clique para Múltiplas Colunas)';
+  } else {
+    fl.classList.remove('view-list');
+    fl.classList.add('view-columns');
+    if (img) img.src = '../../icons/ON.png';
+    btn.title = 'Modo de exibição: Múltiplas Colunas (clique para Lista linear)';
+  }
+}
+
+const toggleViewBtn = $('toggle-view');
+if (toggleViewBtn) {
+  toggleViewBtn.onclick = () => {
+    applyViewMode(state.viewMode === 'columns' ? 'list' : 'columns');
+  };
+}
 
 /* ---------- Lista de Arquivos ---------- */
 async function openDir(dir) {
@@ -208,7 +236,7 @@ function renderList() {
     if (state.filter === 'all') return true;
     return i.isDir || i.kind === state.filter;
   });
-  state.viewables = list.filter((i) => ['image', 'psd', 'video'].includes(i.kind));
+  state.viewables = list.filter((i) => ['image', 'psd', 'video', 'pdf'].includes(i.kind));
   $('count').textContent = list.length + ' itens';
   const frag = document.createDocumentFragment();
   
@@ -404,6 +432,69 @@ function showGenericPreview(item) {
   }
 }
 
+let pdfjsLib = null;
+async function getPdfLib() {
+  if (!pdfjsLib) {
+    pdfjsLib = await import('../../node_modules/pdfjs-dist/build/pdf.min.mjs');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '../../node_modules/pdfjs-dist/build/pdf.worker.min.mjs';
+  }
+  return pdfjsLib;
+}
+
+function updatePdfControls() {
+  const tools = $('pdf-tools');
+  const ind = $('pdf-page-indicator');
+  if (!tools) return;
+  if (state.selected?.kind === 'pdf' && state.pdfDoc) {
+    tools.classList.remove('hidden');
+    if (ind) ind.textContent = `${state.pdfPage} / ${state.pdfTotalPages}`;
+  } else {
+    tools.classList.add('hidden');
+  }
+}
+
+async function renderPdfPage(pageNum) {
+  if (!state.pdfDoc) return;
+  const num = Math.min(state.pdfTotalPages, Math.max(1, pageNum));
+  state.pdfPage = num;
+  updatePdfControls();
+
+  const stage = $('stage');
+  const page = await state.pdfDoc.getPage(num);
+  const viewport = page.getViewport({ scale: 2.0 });
+
+  let canvas = stage.querySelector('.preview-media');
+  if (!canvas || canvas.tagName !== 'CANVAS') {
+    canvas = document.createElement('canvas');
+    canvas.className = 'preview-media';
+    stage.innerHTML = '';
+    stage.appendChild(canvas);
+  }
+
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  canvas.style.aspectRatio = `${viewport.width} / ${viewport.height}`;
+
+  const ctx = canvas.getContext('2d');
+  await page.render({ canvasContext: ctx, viewport }).promise;
+
+  $('p-dim').textContent = `${Math.round(viewport.width / 2)} × ${Math.round(viewport.height / 2)} pt (Pág ${num} de ${state.pdfTotalPages})`;
+  applyTransform();
+}
+
+const btnPdfPrev = $('btn-pdf-prev');
+if (btnPdfPrev) {
+  btnPdfPrev.onclick = () => {
+    if (state.pdfPage > 1) renderPdfPage(state.pdfPage - 1);
+  };
+}
+const btnPdfNext = $('btn-pdf-next');
+if (btnPdfNext) {
+  btnPdfNext.onclick = () => {
+    if (state.pdfPage < state.pdfTotalPages) renderPdfPage(state.pdfPage + 1);
+  };
+}
+
 async function preview(item) {
   const token = ++state.token;
   const stage = $('stage');
@@ -412,6 +503,8 @@ async function preview(item) {
   let node;
   try {
     if (item.kind === 'image') {
+      state.pdfDoc = null;
+      updatePdfControls();
       node = new Image();
       node.className = 'preview-media';
       node.src = fileUrl(item.path);
@@ -419,6 +512,8 @@ async function preview(item) {
       node.style.aspectRatio = `${node.naturalWidth} / ${node.naturalHeight}`;
       $('p-dim').textContent = `${node.naturalWidth} × ${node.naturalHeight}`;
     } else if (item.kind === 'video') {
+      state.pdfDoc = null;
+      updatePdfControls();
       node = document.createElement('video');
       node.className = 'preview-media';
       node.src = fileUrl(item.path);
@@ -431,7 +526,29 @@ async function preview(item) {
           $('p-dim').textContent = `${node.videoWidth} × ${node.videoHeight}`;
         }
       };
+    } else if (item.kind === 'pdf') {
+      const lib = await getPdfLib();
+      const buf = await api.readfile(item.path);
+      const loadingTask = lib.getDocument({ data: new Uint8Array(buf) });
+      const pdfDoc = await loadingTask.promise;
+      state.pdfDoc = pdfDoc;
+      state.pdfPage = 1;
+      state.pdfTotalPages = pdfDoc.numPages;
+
+      const page = await pdfDoc.getPage(1);
+      const viewport = page.getViewport({ scale: 2.0 });
+      node = document.createElement('canvas');
+      node.className = 'preview-media';
+      node.width = viewport.width;
+      node.height = viewport.height;
+      node.style.aspectRatio = `${viewport.width} / ${viewport.height}`;
+      const ctx = node.getContext('2d');
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      $('p-dim').textContent = `${Math.round(viewport.width / 2)} × ${Math.round(viewport.height / 2)} pt (${pdfDoc.numPages} pág${pdfDoc.numPages > 1 ? 's' : ''})`;
+      updatePdfControls();
     } else {
+      state.pdfDoc = null;
+      updatePdfControls();
       const src = await psdToCanvas(item.path);
       node = document.createElement('canvas');
       node.className = 'preview-media';
@@ -527,6 +644,18 @@ window.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT') return;
   if (e.key === 'ArrowRight') step(1);
   else if (e.key === 'ArrowLeft') step(-1);
+  else if (e.key === 'PageDown' || (state.selected?.kind === 'pdf' && e.key === 'ArrowDown')) {
+    if (state.selected?.kind === 'pdf' && state.pdfDoc && state.pdfPage < state.pdfTotalPages) {
+      e.preventDefault();
+      renderPdfPage(state.pdfPage + 1);
+    }
+  }
+  else if (e.key === 'PageUp' || (state.selected?.kind === 'pdf' && e.key === 'ArrowUp')) {
+    if (state.selected?.kind === 'pdf' && state.pdfDoc && state.pdfPage > 1) {
+      e.preventDefault();
+      renderPdfPage(state.pdfPage - 1);
+    }
+  }
   else if (e.key.toLowerCase() === 'r') { 
     state.nav.rot = (state.nav.rot + 90) % 360; 
     applyTransform(); 
@@ -536,12 +665,15 @@ window.addEventListener('keydown', (e) => {
   }
   else if (e.key === 'Escape') { 
     state.token++; 
+    state.pdfDoc = null;
+    updatePdfControls();
     stage.innerHTML = '<div id="placeholder">Selecione um arquivo para pré-visualizar</div>'; 
   }
 });
 
 /* ---------- Início ---------- */
 (async () => {
+  applyViewMode(state.viewMode);
   await buildNav();
   // Abre a pasta inicial atual do projeto
   openDir('c:\\Users\\cviol\\PSD_view');

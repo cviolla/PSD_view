@@ -115,8 +115,9 @@ Card horizontal posicionado no topo, logo acima da janela de preview, exibindo a
 
 ### 3.2 Visualização
 - **PSD:** exibe a imagem composta, sem abrir o Photoshop.
-- **Imagens:** JPG, PNG, WebP, etc.
-- **Vídeos:** reprodução/preview.
+- **PDF:** leitura e renderização nativa de páginas via PDF.js, com navegação de páginas (PgUp/PgDn).
+- **Imagens:** JPG, PNG, WebP, etc. com checkerboard para canais alfa.
+- **Vídeos:** reprodução/preview direto.
 - **Outros arquivos:** ícone e propriedades básicas.
 - Modo de tela cheia no visualizador.
 
@@ -127,6 +128,7 @@ Card horizontal posicionado no topo, logo acima da janela de preview, exibindo a
 
 ### 3.4 Personalização
 - Tema claro e escuro.
+- Alternador de visualização (Lista linear / Múltiplas colunas) com botões oficiais ON / OFF.
 - Janela redimensionável com controles próprios.
 
 ---
@@ -136,6 +138,7 @@ Card horizontal posicionado no topo, logo acima da janela de preview, exibindo a
 | Categoria | Formatos |
 |---|---|
 | **Photoshop** | `.psd` (principal), `.psb` |
+| **Documentos** | `.pdf` (visualização nativa com suporte a multi-páginas) |
 | **Imagens** | `.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.webp`, `.tif/.tiff`, `.svg`, `.ico`, `.heic` |
 | **Vídeos** | `.mp4`, `.mov`, `.avi`, `.mkv`, `.webm`, `.wmv` |
 | **Outros** | Qualquer arquivo é listado com ícone e propriedades |

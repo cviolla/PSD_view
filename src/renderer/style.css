@@ -73,6 +73,8 @@
   --hover: rgba(0, 0, 0, 0.05);
   --active-btn: #000000;
   --active-text: #ffffff;
+  --sel-bg: rgba(228, 255, 0, 0.22);
+  --sel-border: rgba(160, 180, 0, 0.45);
 }
 
 body.dark {
@@ -89,6 +91,8 @@ body.dark {
   --hover: rgba(255, 255, 255, 0.08);
   --active-btn: #ffffff;
   --active-text: #000000;
+  --sel-bg: rgba(228, 255, 0, 0.10);
+  --sel-border: rgba(228, 255, 0, 0.40);
 }
 
 * {
@@ -577,6 +581,7 @@ body.dark .storage-icon {
   top: 12px;
   right: 14px;
   display: flex;
+  align-items: center;
   gap: 5px;
   z-index: 5;
   background: rgba(20, 24, 30, 0.7);
@@ -584,6 +589,23 @@ body.dark .storage-icon {
   padding: 4px 7px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.pdf-tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-right: 6px;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  margin-right: 2px;
+}
+
+#pdf-page-indicator {
+  font-size: 11px;
+  color: #ffffff;
+  font-weight: 500;
+  white-space: nowrap;
+  padding: 0 4px;
 }
 
 #viewer-tools button {
@@ -891,7 +913,7 @@ body.dark #watermark img {
   filter: invert(1);
 }
 
-/* ---------- Filtros Rápidos (Todos, Imagens, PSD, Vídeos) ---------- */
+/* ---------- Filtros Rápidos (Todos, Imagens, PSD, PDF, Vídeos) ---------- */
 #filters button {
   display: flex;
   align-items: center;
@@ -899,9 +921,11 @@ body.dark #watermark img {
   text-align: left;
   font-size: 18px; /* -10% */
   font-weight: 300; /* Gilroy Light */
-  padding: 9px 12px;
+  padding: 7.5px 12px;
   border-radius: 11px;
-  transition: background 0.15s, color 0.15s;
+  border: 1px solid transparent;
+  color: var(--text);
+  transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
 }
 
 .filter-icon {
@@ -919,18 +943,11 @@ body.dark .filter-icon {
 }
 
 #filters button.active {
-  background: var(--active-btn);
-  color: var(--active-text);
+  background: var(--sel-bg);
+  border-color: var(--sel-border);
+  color: var(--text);
   font-weight: 500;
-  box-shadow: inset 3.5px 0 0 var(--accent);
-}
-
-#filters button.active .filter-icon {
-  filter: invert(1);
-}
-
-body.dark #filters button.active .filter-icon {
-  filter: invert(0);
+  box-shadow: 0 0 10px rgba(228, 255, 0, 0.15);
 }
 
 /* ---------- Lista de Pastas e Arquivos (Centro Inferior) ---------- */
@@ -944,20 +961,34 @@ body.dark #filters button.active .filter-icon {
   font-weight: 300;
 }
 
-.view-toggle-icon {
-  height: 18px; /* -10% */
-  object-fit: contain;
+/* ---------- Alternador de Visualização com Ícones Oficiais (ON / OFF) ---------- */
+.view-toggle-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  opacity: 0.85;
-  transition: opacity 0.15s;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  line-height: 0;
+  outline: none;
 }
 
-.view-toggle-icon:hover {
-  opacity: 1;
+.view-toggle-btn:hover {
+  transform: scale(1.08);
+  opacity: 0.95;
 }
 
-body.dark .view-toggle-icon {
-  filter: invert(1);
+.view-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+.toggle-view-icon {
+  height: 18px; /* -10% proporcional */
+  width: auto;
+  object-fit: contain;
+  display: block;
 }
 
 #btn-up {
@@ -988,16 +1019,32 @@ body.dark .view-toggle-icon {
 #file-list {
   flex: 1;
   overflow: auto;
+}
+
+#file-list.view-columns {
   columns: 3 220px;
   column-gap: 14px;
+}
+
+#file-list.view-list {
+  display: flex;
+  flex-direction: column;
+  columns: 1 !important;
+  gap: 2px;
+}
+
+#file-list.view-list .item {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .item {
   display: flex;
   align-items: center;
   gap: 9px;
-  padding: 4.5px 7px;
+  padding: 4.5px 8px;
   border-radius: 7px;
+  border: 1px solid transparent;
   cursor: pointer;
   font-size: 15px; /* -10% */
   font-weight: 300; /* Gilroy Light */
@@ -1005,7 +1052,8 @@ body.dark .view-toggle-icon {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: background 0.1s;
+  color: var(--text);
+  transition: background 0.1s, border-color 0.1s;
 }
 
 .item-file-icon {
@@ -1024,18 +1072,11 @@ body.dark .item-file-icon {
 }
 
 .item.sel {
-  background: var(--active-btn);
-  color: var(--active-text);
+  background: var(--sel-bg);
+  border-color: var(--sel-border);
+  color: var(--text);
   font-weight: 500;
-  box-shadow: inset 3.5px 0 0 var(--accent);
-}
-
-.item.sel .item-file-icon {
-  filter: invert(1);
-}
-
-body.dark .item.sel .item-file-icon {
-  filter: invert(0);
+  box-shadow: 0 0 8px rgba(228, 255, 0, 0.12);
 }
 
 /* ---------- Modal Sobre ---------- */
