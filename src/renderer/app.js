@@ -300,7 +300,7 @@ function showGenericPreview(item) {
         <img src="${iconSrc}" class="icon-img" alt="" />
         <div class="title">${item.name}</div>
         <div class="meta">Pasta de arquivos</div>
-        <button class="action" id="card-open-btn">Abrir pasta ↵</button>
+        <button class="card-btn" id="card-open-btn">Abrir pasta ↵</button>
       </div>`;
     $('card-open-btn').onclick = () => openDir(item.path);
   } else {
@@ -310,7 +310,7 @@ function showGenericPreview(item) {
         <img src="${iconSrc}" class="icon-img" alt="" />
         <div class="title">${item.name}</div>
         <div class="meta">${e} • ${fmtSize(item.size)}</div>
-        <button class="action" id="card-open-btn">Abrir no programa padrão ↗</button>
+        <button class="card-btn" id="card-open-btn">Abrir no programa padrão ↗</button>
       </div>`;
     $('card-open-btn').onclick = () => api.open(item.path);
   }

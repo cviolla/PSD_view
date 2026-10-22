@@ -544,6 +544,35 @@ body.dark .sub-folder-icon {
   font-weight: 300;
 }
 
+.file-card-preview .card-btn {
+  background: #ffffff;
+  color: #000000 !important;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 24px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 0.15s, background 0.15s, box-shadow 0.15s;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  margin-top: 8px;
+}
+
+.file-card-preview .card-btn:hover {
+  background: #e8e8e8;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+
+.file-card-preview .card-btn:active {
+  transform: translateY(0);
+}
+
 #placeholder {
   color: #666666;
   font-size: 16px;
@@ -638,6 +667,7 @@ body.dark .star-img {
   border-radius: 12px;
   margin-bottom: 10px;
   background: var(--bg);
+  color: var(--text);
   border: 1px solid var(--border);
   font-size: 15px;
   font-weight: 400;
@@ -667,6 +697,7 @@ body.dark .reveal-icon {
   margin-bottom: 8px;
   border: 1px solid var(--border);
   background: var(--bg);
+  color: var(--text);
   font-size: 13px;
   font-weight: 300;
   transition: border-color 0.15s;
