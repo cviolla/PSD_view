@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    PSD VIEW - Folha de Estilos com Família Gilroy e Ícones Oficiais (-10% scale)
    ========================================================================== */
 
@@ -1116,3 +1116,111 @@ body.dark .item-file-icon {
 .hidden {
   display: none !important;
 }
+
+/* ---------- Menu de Contexto (botão direito) ---------- */
+#ctx-menu {
+  position: fixed;
+  z-index: 200;
+  min-width: 210px;
+  padding: 6px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(14px);
+  animation: ctx-in 0.12s ease-out;
+}
+
+@keyframes ctx-in {
+  from { opacity: 0; transform: scale(0.97) translateY(-3px); }
+  to { opacity: 1; transform: none; }
+}
+
+.ctx-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 400;
+  text-align: left;
+  color: var(--text);
+  transition: background 0.1s;
+}
+
+.ctx-item:hover:not(:disabled) { background: var(--sel-bg); }
+.ctx-item:disabled { opacity: 0.35; cursor: default; }
+.ctx-item.danger:hover:not(:disabled) { background: rgba(228, 255, 0, 0.18); }
+.ctx-hint { font-size: 11px; color: var(--muted); font-weight: 300; }
+.ctx-sep { height: 1px; margin: 5px 4px; background: var(--border); }
+
+/* ---------- Diálogos ---------- */
+#dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.dialog-card {
+  width: min(460px, 90vw);
+  padding: 22px 24px 18px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+  animation: ctx-in 0.15s ease-out;
+}
+
+.dialog-card h3 { margin: 0 0 12px; font-size: 17px; font-weight: 600; }
+#dialog-body p { margin: 0 0 12px; font-size: 14px; font-weight: 300; word-break: break-all; }
+#dialog-body b { font-weight: 600; }
+
+#dialog-input {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  user-select: text;
+}
+
+#dialog-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(228, 255, 0, 0.2); }
+#dialog-error { min-height: 4px; margin-top: 6px; font-size: 12px; color: var(--muted); }
+
+.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+
+.dlg-btn {
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  font-size: 13px;
+  font-weight: 500;
+  transition: transform 0.1s, background 0.15s, border-color 0.15s;
+}
+
+.dlg-btn:hover { border-color: var(--text); }
+.dlg-btn:active { transform: scale(0.97); }
+.dlg-btn.primary { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 700; }
+.dlg-btn.primary:hover { background: var(--accent-hover); }
+
+.dlg-props {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 8px 12px;
+  margin: 0 0 6px;
+  font-size: 13px;
+  user-select: text;
+}
+

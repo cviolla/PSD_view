@@ -1,10 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; img-src 'self' file: data: blob:; media-src 'self' file: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' file:; script-src 'self' 'unsafe-eval'" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; img-src 'self' file: data: blob:; media-src 'self' file: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' file:; script-src 'self' file: 'unsafe-eval'; worker-src 'self' file: blob:" />
   <meta name="description" content="PSD VIEW - explorer offline e rápido para PSD, imagens e vídeos" />
   <title>PSD VIEW</title>
+  <link rel="icon" type="image/png" href="../../build/favicon.png" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -158,6 +159,21 @@
     </section>
   </main>
 
+  <div id="ctx-menu" class="hidden" role="menu"></div>
+
+  <div id="dialog" class="hidden" role="dialog" aria-modal="true">
+    <div class="dialog-card">
+      <h3 id="dialog-title"></h3>
+      <div id="dialog-body"></div>
+      <input id="dialog-input" class="hidden" type="text" spellcheck="false" />
+      <div id="dialog-error"></div>
+      <div class="dialog-actions">
+        <button id="dialog-cancel" class="dlg-btn">Cancelar</button>
+        <button id="dialog-ok" class="dlg-btn primary">OK</button>
+      </div>
+    </div>
+  </div>
+
   <div id="about" class="hidden">
     <div class="card">
       <img src="../../LOGO.png" alt="PSD VIEW" />
@@ -170,3 +186,4 @@
   <script src="app.js"></script>
 </body>
 </html>
+

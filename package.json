@@ -1,10 +1,12 @@
 {
   "name": "psd-view",
   "version": "0.1.0",
-  "description": "PSD VIEW - explorer offline e rápido para PSD, imagens e vídeos",
+  "description": "PSD VIEW - explorer offline e rápido para PSD, imagens, PDFs e vídeos",
   "main": "src/main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "icons": "powershell -ExecutionPolicy Bypass -File build/make-icons.ps1",
+    "dist": "electron-builder --win portable"
   },
   "author": "Cristiano Violla",
   "license": "UNLICENSED",
@@ -13,6 +15,33 @@
     "pdfjs-dist": "^6.4.299"
   },
   "devDependencies": {
-    "electron": "^33.0.0"
+    "electron": "^33.0.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "br.com.cviolla.psdview",
+    "productName": "PSD VIEW",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "icons/**/*",
+      "build/icon.png",
+      "build/favicon.png",
+      "LOGO.png",
+      "gilroy-*.ttf",
+      "gilroy-*.otf",
+      "Gilroy-*.ttf",
+      "Gilroy-*.otf",
+      "package.json"
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": ["portable"]
+    },
+    "portable": {
+      "artifactName": "PSD-VIEW-${version}-portable.exe"
+    }
   }
 }

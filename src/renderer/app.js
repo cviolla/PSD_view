@@ -252,7 +252,13 @@ function renderList() {
     el.innerHTML = `<img src="${iconSrc}" class="item-file-icon" alt="" /><span>${i.name}</span>`;
     
     el.onclick = () => select(i, el);
-    el.ondblclick = () => i.isDir && openDir(i.path);
+    el.ondblclick = () => (i.isDir ? openDir(i.path) : select(i, el));
+    el.oncontextmenu = (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      select(i, el);
+      showContextMenu(ev.clientX, ev.clientY, i);
+    };
     frag.appendChild(el);
   });
   const fl = $('file-list'); 
@@ -284,7 +290,7 @@ function select(item, el) {
   document.querySelectorAll('.item.sel').forEach((x) => x.classList.remove('sel'));
   el?.classList.add('sel');
   showProps(item);
-  if (['image', 'psd', 'video'].includes(item.kind)) {
+  if (['image', 'psd', 'video', 'pdf'].includes(item.kind)) {
     preview(item);
   } else {
     showGenericPreview(item);
@@ -669,6 +675,209 @@ window.addEventListener('keydown', (e) => {
     updatePdfControls();
     stage.innerHTML = '<div id="placeholder">Selecione um arquivo para pré-visualizar</div>'; 
   }
+});
+
+/* ---------- Diálogos (confirmar / renomear / propriedades) ---------- */
+function openDialog({ title, bodyHtml, confirmText = 'OK', cancelText = 'Cancelar', input = null, danger = false, hideCancel = false }) {
+  return new Promise((resolve) => {
+    const root = $('dialog');
+    $('dialog-title').textContent = title;
+    $('dialog-body').innerHTML = bodyHtml || '';
+    const inp = $('dialog-input');
+    const err = $('dialog-error');
+    err.textContent = '';
+    inp.classList.toggle('hidden', input === null);
+    if (input !== null) inp.value = input;
+    const ok = $('dialog-ok');
+    const cancel = $('dialog-cancel');
+    ok.textContent = confirmText;
+    cancel.textContent = cancelText;
+    cancel.classList.toggle('hidden', hideCancel);
+    ok.classList.toggle('danger', danger);
+    root.classList.remove('hidden');
+
+    const close = (val) => {
+      root.classList.add('hidden');
+      ok.onclick = cancel.onclick = null;
+      inp.onkeydown = null;
+      root.onmousedown = null;
+      resolve(val);
+    };
+    ok.onclick = () => close(input !== null ? inp.value.trim() : true);
+    cancel.onclick = () => close(null);
+    root.onmousedown = (e) => { if (e.target === root) close(null); };
+    inp.onkeydown = (e) => {
+      if (e.key === 'Enter') ok.click();
+      else if (e.key === 'Escape') cancel.click();
+      e.stopPropagation();
+    };
+    if (input !== null) {
+      inp.focus();
+      const dot = input.lastIndexOf('.');
+      inp.setSelectionRange(0, dot > 0 ? dot : input.length);
+    } else {
+      ok.focus();
+    }
+  });
+}
+
+const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmtDate = (ms) => new Date(ms).toLocaleString('pt-BR');
+
+async function showError(msg) {
+  await openDialog({ title: 'Atenção', bodyHtml: `<p>${escapeHtml(msg)}</p>`, confirmText: 'OK', hideCancel: true });
+}
+
+/* ---------- Menu de contexto (botão direito) ---------- */
+const ctxMenu = $('ctx-menu');
+
+function hideContextMenu() {
+  ctxMenu.classList.add('hidden');
+  ctxMenu.innerHTML = '';
+}
+
+function showContextMenu(x, y, item) {
+  const entries = item
+    ? [
+        { label: 'Abrir', hint: 'Enter', run: () => (item.isDir ? openDir(item.path) : api.open(item.path)) },
+        { label: 'Abrir com...', disabled: item.isDir, run: () => api.openWith(item.path) },
+        { sep: true },
+        { label: 'Copiar', hint: 'Ctrl+C', run: () => copyItem(item) },
+        { label: 'Colar', hint: 'Ctrl+V', run: () => pasteHere(item.isDir ? item.path : state.dir) },
+        { sep: true },
+        { label: 'Renomear', hint: 'F2', run: () => renameItem(item) },
+        { label: 'Excluir', hint: 'Del', danger: true, run: () => deleteItem(item) },
+        { sep: true },
+        { label: 'Propriedades', hint: 'Alt+Enter', run: () => showPropsDialog(item) }
+      ]
+    : [
+        { label: 'Colar', hint: 'Ctrl+V', run: () => pasteHere(state.dir) },
+        { label: 'Atualizar', hint: 'F5', run: () => state.dir && openDir(state.dir) },
+        { sep: true },
+        { label: 'Propriedades da pasta', run: () => state.dir && showPropsDialog({ path: state.dir, name: getFolderDisplayName(state.dir), isDir: true }) }
+      ];
+
+  ctxMenu.innerHTML = '';
+  entries.forEach((en) => {
+    if (en.sep) {
+      const s = document.createElement('div');
+      s.className = 'ctx-sep';
+      ctxMenu.appendChild(s);
+      return;
+    }
+    const b = document.createElement('button');
+    b.className = 'ctx-item' + (en.danger ? ' danger' : '');
+    b.disabled = !!en.disabled;
+    b.innerHTML = `<span>${en.label}</span><span class="ctx-hint">${en.hint || ''}</span>`;
+    b.onclick = () => { hideContextMenu(); en.run(); };
+    ctxMenu.appendChild(b);
+  });
+
+  ctxMenu.classList.remove('hidden');
+  const { offsetWidth: w, offsetHeight: h } = ctxMenu;
+  ctxMenu.style.left = Math.max(4, Math.min(x, window.innerWidth - w - 6)) + 'px';
+  ctxMenu.style.top = Math.max(4, Math.min(y, window.innerHeight - h - 6)) + 'px';
+}
+
+async function copyItem(item) {
+  try { await api.copy([item.path]); } catch (e) { showError('Não foi possível copiar: ' + (e.message || e)); }
+}
+
+async function pasteHere(dir) {
+  if (!dir) return;
+  try {
+    const created = await api.paste(dir);
+    if (!created.length) { await showError('A área de transferência não contém arquivos para colar.'); return; }
+    await openDir(state.dir);
+  } catch (e) {
+    showError('Não foi possível colar: ' + (e.message || e));
+  }
+}
+
+async function renameItem(item) {
+  const name = await openDialog({ title: 'Renomear', bodyHtml: `<p>Novo nome para <b>${escapeHtml(item.name)}</b>:</p>`, confirmText: 'Renomear', input: item.name });
+  if (!name || name === item.name) return;
+  try {
+    const dest = await api.rename(item.path, name);
+    if (state.selected?.path === item.path) state.selected = null;
+    await openDir(state.dir);
+    const el = document.querySelector(`.item[data-path="${CSS.escape(dest)}"]`);
+    const found = state.items.find((i) => i.path === dest);
+    if (found && el) { select(found, el); el.scrollIntoView({ block: 'nearest' }); }
+  } catch (e) {
+    showError(String(e.message || e).replace(/^Error invoking remote method '[^']+': (Error: )?/, ''));
+  }
+}
+
+async function deleteItem(item) {
+  const ok = await openDialog({
+    title: 'Excluir',
+    bodyHtml: `<p>Enviar <b>${escapeHtml(item.name)}</b> para a Lixeira?</p>`,
+    confirmText: 'Excluir',
+    danger: true
+  });
+  if (!ok) return;
+  try {
+    await api.remove(item.path);
+    if (state.selected?.path === item.path) {
+      state.selected = null;
+      state.token++;
+      state.pdfDoc = null;
+      updatePdfControls();
+      $('stage').innerHTML = '<div id="placeholder">Selecione um arquivo para pré-visualizar</div>';
+    }
+    await openDir(state.dir);
+  } catch (e) {
+    showError('Não foi possível excluir: ' + (e.message || e));
+  }
+}
+
+async function showPropsDialog(item) {
+  try {
+    const p = await api.props(item.path);
+    const rows = [
+      ['Nome', p.name],
+      ['Tipo', p.isDir ? 'Pasta de arquivos' : (ext(p.name).toUpperCase() || 'Arquivo') ],
+      ['Local', p.path],
+      ['Tamanho', fmtSize(p.size) + (p.isDir ? ` (${p.files} arquivo(s), ${p.dirs} pasta(s))` : ` (${p.size.toLocaleString('pt-BR')} bytes)`)],
+      ['Criado em', fmtDate(p.created)],
+      ['Modificado em', fmtDate(p.modified)],
+      ['Acessado em', fmtDate(p.accessed)],
+      ['Somente leitura', p.readonly ? 'Sim' : 'Não']
+    ];
+    const html = '<dl class="dlg-props">' + rows.map(([k, v]) => `<dt>${k}</dt><dd>${escapeHtml(v)}</dd>`).join('') + '</dl>';
+    await openDialog({ title: 'Propriedades', bodyHtml: html, confirmText: 'Fechar', hideCancel: true });
+  } catch (e) {
+    showError('Não foi possível ler as propriedades: ' + (e.message || e));
+  }
+}
+
+// Botão direito em área vazia da lista
+$('file-list').addEventListener('contextmenu', (ev) => {
+  if (ev.target.closest('.item')) return;
+  ev.preventDefault();
+  showContextMenu(ev.clientX, ev.clientY, null);
+});
+window.addEventListener('contextmenu', (ev) => {
+  if (!ev.target.closest('#file-list')) ev.preventDefault();
+});
+window.addEventListener('mousedown', (ev) => { if (!ev.target.closest('#ctx-menu')) hideContextMenu(); });
+window.addEventListener('blur', hideContextMenu);
+window.addEventListener('resize', hideContextMenu);
+$('file-list').addEventListener('scroll', hideContextMenu);
+
+// Atalhos: Ctrl+C / Ctrl+V / F2 / Delete / F5 / Alt+Enter / Enter
+window.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || !$('dialog').classList.contains('hidden')) return;
+  const sel = state.selected;
+  if (e.key === 'Escape') hideContextMenu();
+  else if (e.ctrlKey && e.key.toLowerCase() === 'c' && sel) { e.preventDefault(); copyItem(sel); }
+  else if (e.ctrlKey && e.key.toLowerCase() === 'v') { e.preventDefault(); pasteHere(sel?.isDir ? sel.path : state.dir); }
+  else if (e.key === 'F2' && sel) { e.preventDefault(); renameItem(sel); }
+  else if (e.key === 'Delete' && sel) { e.preventDefault(); deleteItem(sel); }
+  else if (e.key === 'F5' && state.dir) { e.preventDefault(); openDir(state.dir); }
+  else if (e.altKey && e.key === 'Enter' && sel) { e.preventDefault(); showPropsDialog(sel); }
+  else if (e.key === 'Enter' && sel) { e.preventDefault(); sel.isDir ? openDir(sel.path) : api.open(sel.path); }
 });
 
 /* ---------- Início ---------- */
