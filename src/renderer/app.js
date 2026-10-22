@@ -1,0 +1,230 @@
+/* PSD VIEW - renderer */
+const IMG = ['jpg','jpeg','png','gif','bmp','webp','svg','ico','avif'];
+const VID = ['mp4','webm','mov','mkv','avi','m4v','ogv'];
+const PSD = ['psd','psb'];
+
+const $ = (id) => document.getElementById(id);
+const ext = (n) => (n.includes('.') ? n.split('.').pop().toLowerCase() : '');
+const kind = (f) => f.isDir ? 'dir' : PSD.includes(ext(f.name)) ? 'psd' : IMG.includes(ext(f.name)) ? 'image' : VID.includes(ext(f.name)) ? 'video' : 'other';
+const icon = { dir: '📁', psd: 'Ps', image: '🖼', video: '🎞', other: '📄' };
+const fileUrl = (p) => 'file:///' + encodeURI(p.replace(/\\/g, '/')).replace(/#/g, '%23');
+const fmtSize = (b) => b >= 1073741824 ? (b / 1073741824).toFixed(2) + ' GB' : b >= 1048576 ? (b / 1048576).toFixed(2) + ' MB' : (b / 1024).toFixed(2) + ' KB';
+const fmtGB = (b) => (b / 1073741824).toFixed(1) + ' GB';
+
+const store = {
+  get: (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
+  set: (k, v) => localStorage.setItem(k, JSON.stringify(v))
+};
+
+const state = { dir: null, items: [], filter: 'all', query: '', selected: null, viewables: [], rating: store.get('ratings', {}), favs: store.get('favs', []), nav: { rot: 0, zoom: 1, x: 0, y: 0 }, token: 0 };
+
+/* ---------- Janela / tema ---------- */
+$('btn-min').onclick = () => api.minimize();
+$('btn-max').onclick = () => api.maximize();
+$('btn-close').onclick = () => api.close();
+function setTheme(dark) { document.body.classList.toggle('dark', dark); $('btn-theme').textContent = dark ? '☾' : '☀'; store.set('dark', dark); }
+$('btn-theme').onclick = () => setTheme(!document.body.classList.contains('dark'));
+setTheme(store.get('dark', false));
+$('btn-about').onclick = () => $('about').classList.remove('hidden');
+$('about-close').onclick = () => $('about').classList.add('hidden');
+document.querySelectorAll('.group-head').forEach((h) => h.onclick = () => h.parentElement.classList.toggle('collapsed'));
+
+/* ---------- Navegação lateral ---------- */
+function navButton(label, path) {
+  const b = document.createElement('button');
+  b.textContent = label; b.title = path; b.onclick = () => openDir(path);
+  return b;
+}
+async function buildNav() {
+  const home = await api.home();
+  const gs = $('g-sistema'); gs.innerHTML = '';
+  Object.entries(home).forEach(([k, v]) => gs.appendChild(navButton(k, v)));
+  const drives = await api.drives();
+  const gd = $('g-discos'); gd.innerHTML = '';
+  drives.forEach((d) => gd.appendChild(navButton(d.letter, d.path)));
+  const sl = $('storage-list'); sl.innerHTML = '';
+  drives.filter((d) => d.total).forEach((d) => {
+    const p = Math.round((d.used / d.total) * 100);
+    const el = document.createElement('div'); el.className = 'drive';
+    el.innerHTML = `<div class="ring" style="--p:${p}" data-p="${p}%"></div><div><b>${d.letter}</b><br>${fmtGB(d.used)} usados · ${fmtGB(d.free)} livres de ${fmtGB(d.total)}</div>`;
+    el.onclick = () => openDir(d.path);
+    sl.appendChild(el);
+  });
+  renderFavs();
+}
+function renderFavs() {
+  const g = $('g-favoritos'); g.innerHTML = '';
+  state.favs.forEach((p) => g.appendChild(navButton(p.split(/[\\/]/).filter(Boolean).pop() || p, p)));
+}
+$('btn-fav').onclick = () => {
+  if (!state.dir) return;
+  if (state.favs.includes(state.dir)) state.favs = state.favs.filter((f) => f !== state.dir);
+  else state.favs.push(state.dir);
+  store.set('favs', state.favs); renderFavs();
+};
+
+/* ---------- Lista de arquivos ---------- */
+async function openDir(dir) {
+  try {
+    const items = await api.readdir(dir);
+    state.dir = dir;
+    state.items = items.map((i) => ({ ...i, kind: kind(i) }))
+      .sort((a, b) => (b.isDir - a.isDir) || a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+    $('crumb').textContent = dir;
+    renderList();
+  } catch (e) {
+    $('crumb').textContent = 'Não foi possível abrir: ' + dir;
+  }
+}
+function renderList() {
+  const q = state.query.toLowerCase();
+  const list = state.items.filter((i) => {
+    if (q && !i.name.toLowerCase().includes(q)) return false;
+    if (state.filter === 'all') return true;
+    return i.isDir || i.kind === state.filter;
+  });
+  state.viewables = list.filter((i) => ['image', 'psd', 'video'].includes(i.kind));
+  $('count').textContent = list.length + ' itens';
+  const frag = document.createDocumentFragment();
+  // renderização em lote para pastas muito grandes
+  const LIMIT = 3000;
+  list.slice(0, LIMIT).forEach((i) => {
+    const el = document.createElement('div');
+    el.className = 'item' + (state.selected?.path === i.path ? ' sel' : '');
+    el.textContent = `${icon[i.kind]} ${i.name}`; el.title = i.name; el.dataset.path = i.path;
+    el.onclick = () => select(i, el);
+    el.ondblclick = () => i.isDir && openDir(i.path);
+    frag.appendChild(el);
+  });
+  const fl = $('file-list'); fl.innerHTML = ''; fl.appendChild(frag);
+}
+$('btn-up').onclick = () => {
+  if (!state.dir) return;
+  const up = state.dir.replace(/[\\/]+$/, '').replace(/[\\/][^\\/]*$/, '');
+  openDir(/^[A-Za-z]:$/.test(up) ? up + '\\' : up || state.dir);
+};
+$('search').oninput = (e) => { state.query = e.target.value; renderList(); };
+document.querySelectorAll('#filters button').forEach((b) => b.onclick = () => {
+  document.querySelectorAll('#filters button').forEach((x) => x.classList.remove('active'));
+  b.classList.add('active'); state.filter = b.dataset.filter; renderList();
+});
+
+/* ---------- Seleção / preview / propriedades ---------- */
+function select(item, el) {
+  state.selected = item;
+  document.querySelectorAll('.item.sel').forEach((x) => x.classList.remove('sel'));
+  el?.classList.add('sel');
+  showProps(item);
+  if (['image', 'psd', 'video'].includes(item.kind)) preview(item);
+  prefetch(item);
+}
+function showProps(item) {
+  $('p-tipo').textContent = item.isDir ? 'Pasta' : item.name;
+  $('p-tam').textContent = item.isDir ? '—' : fmtSize(item.size);
+  $('p-cam').textContent = item.path.length > 38 ? '…' + item.path.slice(-36) : item.path;
+  $('p-cam').title = item.path;
+  $('p-mod').textContent = new Date(item.mtime).toLocaleDateString('pt-BR');
+  $('p-dim').textContent = '—'; $('p-time').textContent = '—';
+  renderStars();
+}
+function renderStars() {
+  const box = $('p-stars'); box.innerHTML = '';
+  const cur = state.selected ? state.rating[state.selected.path] || 0 : 0;
+  for (let n = 1; n <= 5; n++) {
+    const s = document.createElement('span'); s.textContent = '★'; if (n <= cur) s.className = 'on';
+    s.onclick = () => {
+      if (!state.selected) return;
+      state.rating[state.selected.path] = cur === n ? 0 : n;
+      store.set('ratings', state.rating); renderStars();
+    };
+    box.appendChild(s);
+  }
+}
+$('btn-reveal').onclick = () => state.selected && api.reveal(state.selected.path);
+
+const psdCache = new Map(); // path -> canvas (cache simples em memória)
+async function psdToCanvas(path) {
+  if (psdCache.has(path)) return psdCache.get(path);
+  const buf = await api.readfile(path);
+  const psd = agPsd.readPsd(buf.buffer ? new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength) : buf,
+    { skipLayerImageData: true, skipThumbnail: true, skipCompositeImageData: false });
+  const canvas = psd.canvas;
+  psdCache.set(path, canvas);
+  if (psdCache.size > 8) psdCache.delete(psdCache.keys().next().value);
+  return canvas;
+}
+function prefetch(item) {
+  const i = state.viewables.findIndex((v) => v.path === item.path);
+  [state.viewables[i + 1]].forEach((n) => {
+    if (n?.kind === 'psd') psdToCanvas(n.path).catch(() => {});
+  });
+}
+
+async function preview(item) {
+  const token = ++state.token;
+  const stage = $('stage');
+  state.nav = { rot: 0, zoom: 1, x: 0, y: 0 };
+  const t0 = performance.now();
+  let node;
+  try {
+    if (item.kind === 'image') {
+      node = new Image(); node.src = fileUrl(item.path);
+      await node.decode();
+      $('p-dim').textContent = `${node.naturalWidth} × ${node.naturalHeight}`;
+    } else if (item.kind === 'video') {
+      node = document.createElement('video'); node.src = fileUrl(item.path); node.controls = true; node.autoplay = true;
+      $('p-dim').textContent = '—';
+    } else {
+      const src = await psdToCanvas(item.path);
+      node = document.createElement('canvas'); node.width = src.width; node.height = src.height;
+      node.getContext('2d').drawImage(src, 0, 0);
+      $('p-dim').textContent = `${src.width} × ${src.height}`;
+    }
+  } catch (e) {
+    if (token !== state.token) return;
+    stage.innerHTML = `<div id="placeholder">Não foi possível abrir este arquivo.<br><small>${String(e.message || e)}</small></div>`;
+    return;
+  }
+  if (token !== state.token) return; // usuário já trocou de arquivo
+  $('p-time').textContent = Math.round(performance.now() - t0) + ' ms';
+  stage.innerHTML = ''; stage.appendChild(node); applyTransform();
+}
+
+/* ---------- Zoom / mover / girar / navegar ---------- */
+function applyTransform() {
+  const n = $('stage').firstElementChild; if (!n || n.tagName === 'VIDEO' || n.id === 'placeholder') return;
+  const { rot, zoom, x, y } = state.nav;
+  n.style.transform = `translate(${x}px, ${y}px) rotate(${rot}deg) scale(${zoom})`;
+}
+function step(d) {
+  if (!state.viewables.length) return;
+  let i = state.viewables.findIndex((v) => v.path === state.selected?.path);
+  i = (i + d + state.viewables.length) % state.viewables.length;
+  const it = state.viewables[i];
+  select(it, document.querySelector(`.item[data-path="${CSS.escape(it.path)}"]`));
+  document.querySelector('.item.sel')?.scrollIntoView({ block: 'nearest' });
+}
+const stage = $('stage');
+stage.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  if (e.ctrlKey) { state.nav.zoom = Math.min(20, Math.max(0.1, state.nav.zoom * (e.deltaY < 0 ? 1.1 : 0.9))); applyTransform(); }
+  else step(e.deltaY > 0 ? 1 : -1);
+}, { passive: false });
+let drag = null;
+stage.addEventListener('mousedown', (e) => { drag = { x: e.clientX - state.nav.x, y: e.clientY - state.nav.y }; stage.classList.add('dragging'); });
+window.addEventListener('mousemove', (e) => { if (!drag) return; state.nav.x = e.clientX - drag.x; state.nav.y = e.clientY - drag.y; applyTransform(); });
+window.addEventListener('mouseup', () => { drag = null; stage.classList.remove('dragging'); });
+window.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'ArrowRight') step(1);
+  else if (e.key === 'ArrowLeft') step(-1);
+  else if (e.key.toLowerCase() === 'r') { state.nav.rot = (state.nav.rot + 90) % 360; applyTransform(); }
+  else if (e.key === 'Escape') { state.token++; stage.innerHTML = '<div id="placeholder">Selecione uma imagem, PSD ou vídeo</div>'; }
+});
+
+/* ---------- Início ---------- */
+(async () => {
+  await buildNav();
+  const home = await api.home();
+  openDir(home.Imagens || home.Documentos);
+})();

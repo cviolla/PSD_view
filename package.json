@@ -1,0 +1,17 @@
+{
+  "name": "psd-view",
+  "version": "0.1.0",
+  "description": "PSD VIEW - explorer offline e rápido para PSD, imagens e vídeos",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "author": "Cristiano Violla",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "ag-psd": "^28.0.0"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0"
+  }
+}

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; img-src 'self' file: data: blob:; media-src 'self' file: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-eval'" />
+  <meta name="description" content="PSD VIEW - explorer offline e rápido para PSD, imagens e vídeos" />
+  <title>PSD VIEW</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header id="titlebar">
+    <div class="brand">
+      <img src="../../LOGO.png" alt="PSD VIEW" id="logo" />
+      <button id="btn-about" class="link">Sobre</button>
+    </div>
+    <div class="win-controls">
+      <button id="btn-theme" title="Alternar tema">☀</button>
+      <button id="btn-min" title="Minimizar">—</button>
+      <button id="btn-max" title="Maximizar">⤢</button>
+      <button id="btn-close" title="Fechar">✕</button>
+    </div>
+  </header>
+
+  <main id="layout">
+    <aside id="nav" class="panel">
+      <input id="search" type="search" placeholder="🔍  Buscar nesta pasta" />
+      <div class="group" data-group="sistema"><button class="group-head">Sistema <span>▾</span></button><div class="group-body" id="g-sistema"></div></div>
+      <div class="group" data-group="discos"><button class="group-head">Discos <span>▾</span></button><div class="group-body" id="g-discos"></div></div>
+      <div class="group" data-group="favoritos"><button class="group-head">Favoritos <span>▾</span></button><div class="group-body" id="g-favoritos"></div></div>
+      <div id="storage"><h3>Armazenamento</h3><div id="storage-list"></div></div>
+    </aside>
+
+    <section id="viewer">
+      <div id="stage"><div id="placeholder">Selecione uma imagem, PSD ou vídeo</div></div>
+      <div id="hint">Roda do mouse / ← →: Navegar • Ctrl + Roda: Zoom • Arraste: Mover • R: Girar • Esc: Fechar</div>
+    </section>
+
+    <aside id="props" class="panel">
+      <h2>Propriedades</h2>
+      <dl>
+        <dt>Tipo</dt><dd id="p-tipo">—</dd>
+        <dt>Tamanho</dt><dd id="p-tam">—</dd>
+        <dt>Caminho</dt><dd id="p-cam" title="">—</dd>
+        <dt>Última modificação</dt><dd id="p-mod">—</dd>
+        <dt>Classificação</dt><dd id="p-stars"></dd>
+        <dt>Dimensões</dt><dd id="p-dim">—</dd>
+        <dt>Tempo de leitura</dt><dd id="p-time">—</dd>
+      </dl>
+      <button id="btn-reveal" class="action">Mostrar no explorer ⇱</button>
+      <button id="btn-fav" class="action">♥ Favoritar pasta atual</button>
+    </aside>
+
+    <nav id="filters" class="panel">
+      <button data-filter="all" class="active">▦ Todos</button>
+      <button data-filter="image">🖼 Imagens</button>
+      <button data-filter="psd">Ps PSD</button>
+      <button data-filter="video">🎞 Vídeos</button>
+    </nav>
+
+    <section id="files" class="panel">
+      <div id="files-bar"><button id="btn-up" title="Subir um nível">↑</button><span id="crumb"></span><span id="count"></span></div>
+      <div id="file-list"></div>
+    </section>
+  </main>
+
+  <div id="about" class="hidden"><div class="card">
+    <img src="../../LOGO.png" alt="PSD VIEW" />
+    <p>Versão 0.1.0 — Explorer offline e rápido.</p>
+    <button id="about-close" class="action">Fechar</button>
+  </div></div>
+
+  <script src="../../node_modules/ag-psd/dist/bundle.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
