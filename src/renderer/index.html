@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; img-src 'self' file: data: blob:; media-src 'self' file: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-eval'" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; img-src 'self' file: data: blob:; media-src 'self' file: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' file:; script-src 'self' 'unsafe-eval'" />
   <meta name="description" content="PSD VIEW - explorer offline e rápido para PSD, imagens e vídeos" />
   <title>PSD VIEW</title>
   <link rel="stylesheet" href="style.css" />
@@ -14,20 +14,68 @@
       <button id="btn-about" class="link">Sobre</button>
     </div>
     <div class="win-controls">
-      <button id="btn-theme" title="Alternar tema">☀</button>
-      <button id="btn-min" title="Minimizar">—</button>
-      <button id="btn-max" title="Maximizar">⤢</button>
-      <button id="btn-close" title="Fechar">✕</button>
+      <button id="btn-theme" title="Alternar tema">
+        <img id="icon-theme" src="../../icons/Sun.png" alt="Tema" class="app-icon" />
+      </button>
+      <button id="btn-min" title="Minimizar">
+        <img src="../../icons/MacOS-Minimize.png" alt="Minimizar" class="app-icon" />
+      </button>
+      <button id="btn-max" title="Maximizar">
+        <img src="../../icons/Decompress.png" alt="Maximizar" class="app-icon" />
+      </button>
+      <button id="btn-close" title="Fechar">
+        <img src="../../icons/MacOS-Close.png" alt="Fechar" class="app-icon" />
+      </button>
     </div>
   </header>
 
   <main id="layout">
     <aside id="nav" class="panel">
-      <input id="search" type="search" placeholder="🔍  Buscar nesta pasta" />
-      <div class="group" data-group="sistema"><button class="group-head">Sistema <span>▾</span></button><div class="group-body" id="g-sistema"></div></div>
-      <div class="group" data-group="discos"><button class="group-head">Discos <span>▾</span></button><div class="group-body" id="g-discos"></div></div>
-      <div class="group" data-group="favoritos"><button class="group-head">Favoritos <span>▾</span></button><div class="group-body" id="g-favoritos"></div></div>
-      <div id="storage"><h3>Armazenamento</h3><div id="storage-list"></div></div>
+      <div class="search-box">
+        <img src="../../icons/Search.png" alt="Buscar" class="search-icon" />
+        <input id="search" type="search" placeholder="Buscar nesta pasta" />
+      </div>
+
+      <div class="group" data-group="sistema">
+        <button class="group-head">
+          <span class="head-left">
+            <img src="../../icons/Laptop-Settings.png" alt="" class="head-icon" />
+            <span>Sistema</span>
+          </span>
+          <img src="../../icons/Next-Page.png" alt="" class="chevron-icon" />
+        </button>
+        <div class="group-body" id="g-sistema"></div>
+      </div>
+
+      <div class="group" data-group="discos">
+        <button class="group-head">
+          <span class="head-left">
+            <img src="../../icons/Data-Recovery.png" alt="" class="head-icon" />
+            <span>Discos</span>
+          </span>
+          <img src="../../icons/Next-Page.png" alt="" class="chevron-icon" />
+        </button>
+        <div class="group-body" id="g-discos"></div>
+      </div>
+
+      <div class="group" data-group="favoritos">
+        <button class="group-head">
+          <span class="head-left">
+            <img src="../../icons/Heart.png" alt="" class="head-icon" />
+            <span>Favoritos</span>
+          </span>
+          <img src="../../icons/Next-Page.png" alt="" class="chevron-icon" />
+        </button>
+        <div class="group-body" id="g-favoritos"></div>
+      </div>
+
+      <div id="storage">
+        <div class="storage-title-wrap">
+          <h3>Armazenamento</h3>
+          <span id="storage-summary" class="storage-summary"></span>
+        </div>
+        <div id="storage-list"></div>
+      </div>
     </aside>
 
     <section id="viewer">
@@ -52,29 +100,56 @@
         <dt>Dimensões</dt><dd id="p-dim">—</dd>
         <dt>Tempo de leitura</dt><dd id="p-time">—</dd>
       </dl>
+      <button id="btn-reveal" class="action-reveal">
+        <span>Mostrar no explorer</span>
+        <img src="../../icons/Close-Pane.png" alt="" class="reveal-icon" />
+      </button>
       <button id="btn-open-app" class="action">Abrir no programa padrão ↗</button>
-      <button id="btn-reveal" class="action">Mostrar no explorer ⇱</button>
       <button id="btn-fav" class="action">♥ Favoritar pasta atual</button>
+
+      <!-- Marca d'água lateral direita oficial -->
+      <div id="watermark">
+        <img src="../../icons/Agrupar 2 copiar.png" alt="PSD VIEW" />
+      </div>
     </aside>
 
     <nav id="filters" class="panel">
-      <button data-filter="all" class="active">▦ Todos</button>
-      <button data-filter="image">🖼 Imagens</button>
-      <button data-filter="psd">Ps PSD</button>
-      <button data-filter="video">🎞 Vídeos</button>
+      <button data-filter="all" class="active">
+        <img src="../../icons/Border-All.png" alt="" class="filter-icon" />
+        <span>Todos</span>
+      </button>
+      <button data-filter="image">
+        <img src="../../icons/Picture.png" alt="" class="filter-icon" />
+        <span>Imagens</span>
+      </button>
+      <button data-filter="psd">
+        <img src="../../icons/Adobe-Photoshop.png" alt="" class="filter-icon" />
+        <span>PSD</span>
+      </button>
+      <button data-filter="video">
+        <img src="../../icons/Clip-Appearance.png" alt="" class="filter-icon" />
+        <span>Videos</span>
+      </button>
     </nav>
 
     <section id="files" class="panel">
-      <div id="files-bar"><button id="btn-up" title="Subir um nível">↑</button><span id="crumb"></span><span id="count"></span></div>
+      <div id="files-bar">
+        <img src="../../icons/Camada 3.png" alt="Alternar exibição" id="toggle-view" class="view-toggle-icon" />
+        <button id="btn-up" title="Subir um nível">↑</button>
+        <span id="crumb"></span>
+        <span id="count"></span>
+      </div>
       <div id="file-list"></div>
     </section>
   </main>
 
-  <div id="about" class="hidden"><div class="card">
-    <img src="../../LOGO.png" alt="PSD VIEW" />
-    <p>Versão 0.1.0 — Explorer offline e rápido.</p>
-    <button id="about-close" class="action">Fechar</button>
-  </div></div>
+  <div id="about" class="hidden">
+    <div class="card">
+      <img src="../../LOGO.png" alt="PSD VIEW" />
+      <p>PSD VIEW — Versão 0.1.0<br>Explorer offline e rápido com fontes Gilroy e ícones oficiais.</p>
+      <button id="about-close" class="action">Fechar</button>
+    </div>
+  </div>
 
   <script src="../../node_modules/ag-psd/dist/bundle.js"></script>
   <script src="app.js"></script>

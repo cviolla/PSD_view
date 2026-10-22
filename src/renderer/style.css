@@ -1,67 +1,455 @@
+/* ==========================================================================
+   PSD VIEW - Folha de Estilos com Família Gilroy e Ícones Oficiais
+   ========================================================================== */
+
+/* ---------- Registro da Família de Fontes Gilroy ---------- */
+@font-face {
+  font-family: 'Gilroy';
+  src: url('../../gilroy-thin.ttf') format('truetype');
+  font-weight: 100;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Gilroy';
+  src: url('../../gilroy-ultralight.ttf') format('truetype');
+  font-weight: 200;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Gilroy';
+  src: url('../../Gilroy-Light.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Gilroy';
+  src: url('../../gilroy-regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Gilroy';
+  src: url('../../gilroy-medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Gilroy';
+  src: url('../../gilroy-semi-bold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Gilroy';
+  src: url('../../gilroy-bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Gilroy';
+  src: url('../../gilroy-extrabold.otf') format('opentype');
+  font-weight: 800;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Gilroy';
+  src: url('../../Gilroy-Heavy.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+}
+
+/* ---------- Variáveis de Tema ---------- */
 :root {
-  --bg: #ffffff; --panel: #f2f2f2; --text: #1b1b1b; --muted: #777; --accent: #111; --border: #d9d9d9; --stage: #000;
+  --bg: #ffffff;
+  --panel: #f3f3f5;
+  --text: #111111;
+  --muted: #737373;
+  --accent: #000000;
+  --border: #e2e2e5;
+  --stage: #000000;
+  --card-bg: #ffffff;
+  --hover: rgba(0, 0, 0, 0.05);
+  --active-btn: #000000;
+  --active-text: #ffffff;
 }
+
 body.dark {
-  --bg: #16171a; --panel: #212328; --text: #ececec; --muted: #9a9ca3; --accent: #fff; --border: #34363c; --stage: #000;
+  --bg: #141518;
+  --panel: #1d1f24;
+  --text: #f0f0f2;
+  --muted: #9598a0;
+  --accent: #ffffff;
+  --border: #2c2f36;
+  --stage: #000000;
+  --card-bg: #24272e;
+  --hover: rgba(255, 255, 255, 0.08);
+  --active-btn: #ffffff;
+  --active-text: #000000;
 }
-* { box-sizing: border-box; }
-html, body { height: 100%; margin: 0; }
-body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; overflow: hidden; }
-button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
 
-#titlebar { height: 52px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; -webkit-app-region: drag; flex: none; }
-#titlebar button, #titlebar input { -webkit-app-region: no-drag; }
-.brand { display: flex; align-items: center; gap: 16px; }
-#logo { height: 26px; }
-body.dark #logo { filter: invert(1); }
-.link { color: var(--muted); font-size: 16px; }
-.link:hover { color: var(--text); }
-.win-controls button { width: 32px; height: 32px; border-radius: 50%; font-size: 15px; margin-left: 6px; }
-.win-controls button:hover { background: var(--panel); }
-#btn-close:hover { background: #e5484d; color: #fff; }
+* {
+  box-sizing: border-box;
+}
 
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Gilroy', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  user-select: none;
+  letter-spacing: 0.2px;
+}
+
+button {
+  font-family: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* ---------- Barra Superior (Titlebar) ---------- */
+#titlebar {
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  -webkit-app-region: drag;
+  flex: none;
+}
+
+#titlebar button, #titlebar input {
+  -webkit-app-region: no-drag;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+#logo {
+  height: 24px;
+  object-fit: contain;
+}
+
+body.dark #logo {
+  filter: invert(1);
+}
+
+.link {
+  color: var(--muted);
+  font-size: 17px;
+  font-weight: 300;
+  transition: color 0.15s;
+}
+
+.link:hover {
+  color: var(--text);
+}
+
+.win-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.win-controls button {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.win-controls button:hover {
+  background: var(--panel);
+}
+
+#btn-close:hover {
+  background: #e5484d;
+}
+
+.app-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  transition: filter 0.15s;
+}
+
+body.dark .app-icon {
+  filter: invert(1);
+}
+
+#btn-close:hover .app-icon {
+  filter: brightness(2);
+}
+
+/* ---------- Grid Principal do Layout ---------- */
 #layout {
-  flex: 1; min-height: 0; display: grid; gap: 14px; padding: 0 20px 20px;
-  grid-template-columns: 270px 1fr 300px;
-  grid-template-rows: 1fr 280px;
-  grid-template-areas: "nav viewer props" "filters files props";
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  gap: 16px;
+  padding: 0 24px 20px 24px;
+  grid-template-columns: 280px 1fr 310px;
+  grid-template-rows: 1fr 270px;
+  grid-template-areas:
+    "nav viewer props"
+    "filters files props";
 }
-.panel { background: var(--panel); border: 1px solid var(--border); border-radius: 18px; padding: 16px; overflow: auto; }
-#nav { grid-area: nav; } #viewer { grid-area: viewer; } #props { grid-area: props; }
-#filters { grid-area: filters; display: flex; flex-direction: column; gap: 4px; } #files { grid-area: files; display: flex; flex-direction: column; padding: 10px 14px; }
 
-#search { width: 100%; padding: 10px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 14px; margin-bottom: 14px; }
-.group-head { width: 100%; display: flex; justify-content: space-between; font-size: 20px; padding: 6px 4px; }
-.group.collapsed .group-body { display: none; }
-.group-body button { display: block; width: 100%; text-align: left; padding: 5px 4px 5px 18px; font-size: 14px; border-radius: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.group-body button:hover, #filters button:hover { background: rgba(128,128,128,.18); }
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 16px;
+  overflow: auto;
+  position: relative;
+}
 
-#storage h3 { font-size: 13px; margin: 14px 0 6px; }
-.drive { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px; margin-bottom: 6px; display: flex; gap: 10px; align-items: center; cursor: pointer; font-size: 11px; color: var(--muted); }
-.ring { --p: 0; width: 38px; height: 38px; border-radius: 50%; flex: none; display: grid; place-items: center; font-size: 10px; font-weight: 700; color: var(--text); background: conic-gradient(var(--accent) calc(var(--p) * 1%), var(--border) 0); position: relative; }
-.ring::after { content: attr(data-p); position: absolute; inset: 5px; border-radius: 50%; background: var(--bg); display: grid; place-items: center; }
+#nav { grid-area: nav; display: flex; flex-direction: column; }
+#viewer { grid-area: viewer; }
+#props { grid-area: props; }
+#filters { grid-area: filters; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+#files { grid-area: files; display: flex; flex-direction: column; padding: 14px 18px; }
 
-#filters button { text-align: left; font-size: 18px; padding: 10px 12px; border-radius: 10px; }
-#filters button.active { background: var(--accent); color: var(--bg); }
+/* ---------- Barra de Busca com Ícone Search ---------- */
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 16px;
+  margin-bottom: 16px;
+}
 
-#viewer { 
-  background: var(--stage); 
-  border-radius: 18px; 
-  position: relative; 
-  overflow: hidden; 
-  border: 1px solid var(--border); 
+.search-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  opacity: 0.8;
+}
+
+body.dark .search-icon {
+  filter: invert(1);
+}
+
+#search {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 300;
+  width: 100%;
+  outline: none;
+}
+
+/* ---------- Grupos de Navegação (Sistema, Discos, Favoritos) ---------- */
+.group {
+  margin-bottom: 6px;
+}
+
+.group-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 6px;
+  border-radius: 10px;
+  transition: background 0.15s;
+}
+
+.group-head:hover {
+  background: var(--hover);
+}
+
+.head-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 21px;
+  font-weight: 300; /* Gilroy Light */
+}
+
+.head-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+body.dark .head-icon {
+  filter: invert(1);
+}
+
+.chevron-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  transition: transform 0.2s;
+}
+
+body.dark .chevron-icon {
+  filter: invert(1);
+}
+
+.group.collapsed .chevron-icon {
+  transform: rotate(-90deg);
+}
+
+.group.collapsed .group-body {
+  display: none;
+}
+
+.group-body {
+  padding: 4px 0 6px 36px;
+}
+
+.group-body button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  padding: 6px 10px;
+  font-size: 15px;
+  font-weight: 300;
+  border-radius: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background 0.15s;
+}
+
+.group-body button:hover {
+  background: var(--hover);
+}
+
+.sub-folder-icon {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+}
+
+body.dark .sub-folder-icon {
+  filter: invert(1);
+}
+
+/* ---------- Armazenamento (Discos) ---------- */
+#storage {
+  margin-top: auto;
+  padding-top: 14px;
+}
+
+.storage-title-wrap {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.storage-title-wrap h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+  text-transform: capitalize;
+}
+
+.storage-summary {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 300;
+}
+
+.drive-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.1s, border-color 0.15s;
+}
+
+.drive-card:hover {
+  border-color: var(--text);
+  transform: translateY(-1px);
+}
+
+.ring {
+  --p: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  flex: none;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+  background: conic-gradient(var(--text) calc(var(--p) * 1%), var(--border) 0);
+  position: relative;
+}
+
+.ring::after {
+  content: attr(data-p);
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  background: var(--card-bg);
+  display: grid;
+  place-items: center;
+}
+
+.drive-info {
+  line-height: 1.35;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.drive-letter {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* ---------- Visualizador (Viewer & Stage) ---------- */
+#viewer {
+  background: var(--stage);
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
 }
 
 #viewer-tools {
   position: absolute;
-  top: 12px;
-  right: 14px;
+  top: 14px;
+  right: 16px;
   display: flex;
   gap: 6px;
   z-index: 5;
   background: rgba(20, 24, 30, 0.7);
-  backdrop-filter: blur(8px);
-  padding: 4px 6px;
+  backdrop-filter: blur(10px);
+  padding: 4px 8px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
@@ -74,30 +462,32 @@ body.dark #logo { filter: invert(1); }
   align-items: center;
   justify-content: center;
   font-size: 14px;
-  color: #fff;
+  color: #ffffff;
   transition: background 0.15s, transform 0.1s;
 }
 
 #viewer-tools button:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.05);
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.08);
 }
 
-#stage { 
-  position: absolute; 
-  inset: 0; 
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
-  overflow: hidden; 
-  cursor: grab; 
-  padding: 24px 24px 50px 24px; 
-  box-sizing: border-box; 
+#stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: grab;
+  padding: 24px 24px 50px 24px;
+  box-sizing: border-box;
 }
 
-#stage.dragging { cursor: grabbing; }
+#stage.dragging {
+  cursor: grabbing;
+}
 
-/* Enquadramento perfeito com contain sem corte e sem distorção */
+/* Enquadramento proporcional perfeito */
 .preview-media {
   max-width: 100%;
   max-height: 100%;
@@ -106,8 +496,8 @@ body.dark #logo { filter: invert(1); }
   object-fit: contain;
   display: block;
   margin: auto;
-  border-radius: 6px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
   transform-origin: center center;
   user-select: none;
   -webkit-user-drag: none;
@@ -115,7 +505,7 @@ body.dark #logo { filter: invert(1); }
 }
 
 #stage video.preview-media {
-  background: #000;
+  background: #000000;
   outline: none;
 }
 
@@ -124,52 +514,366 @@ body.dark #logo { filter: invert(1); }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  color: #fff;
+  gap: 14px;
+  color: #ffffff;
   text-align: center;
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 30px;
-  border-radius: 16px;
-  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 36px;
+  border-radius: 20px;
+  backdrop-filter: blur(12px);
 }
-.file-card-preview .icon { font-size: 54px; }
-.file-card-preview .title { font-size: 18px; font-weight: 600; max-width: 320px; word-break: break-all; }
-.file-card-preview .meta { font-size: 13px; color: #9aa; }
 
-#placeholder { color: #777; font-size: 15px; }
-#hint { 
-  position: absolute; 
-  bottom: 12px; 
-  left: 50%; 
-  transform: translateX(-50%); 
-  font-size: 11px; 
-  color: #adb5bd; 
-  background: rgba(20, 25, 35, 0.85); 
-  backdrop-filter: blur(6px);
-  padding: 5px 18px; 
-  border-radius: 999px; 
-  white-space: nowrap; 
+.file-card-preview .icon-img {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  filter: invert(1);
+}
+
+.file-card-preview .title {
+  font-size: 19px;
+  font-weight: 500;
+  max-width: 340px;
+  word-break: break-all;
+}
+
+.file-card-preview .meta {
+  font-size: 13px;
+  color: #a0a6b5;
+  font-weight: 300;
+}
+
+#placeholder {
+  color: #666666;
+  font-size: 16px;
+  font-weight: 300;
+}
+
+#hint {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-weight: 400;
+  color: #adb5bd;
+  background: rgba(20, 25, 35, 0.85);
+  backdrop-filter: blur(8px);
+  padding: 5px 20px;
+  border-radius: 999px;
+  white-space: nowrap;
   border: 1px solid rgba(255, 255, 255, 0.1);
   pointer-events: none;
 }
 
-#props h2 { font-weight: 400; text-align: center; font-size: 26px; margin: 10px 0 24px; }
-dl { display: grid; grid-template-columns: auto 1fr; gap: 14px 14px; font-size: 15px; margin: 0 0 20px; }
-dt { color: var(--muted); } dd { margin: 0; word-break: break-all; }
-#p-stars span { cursor: pointer; font-size: 20px; color: var(--border); } #p-stars span.on { color: var(--text); }
-.action { display: block; width: 100%; text-align: left; padding: 10px 12px; border-radius: 10px; margin-bottom: 8px; border: 1px solid var(--border); background: var(--bg); }
-.action:hover { border-color: var(--accent); }
+/* ---------- Painel de Propriedades (Direita) ---------- */
+#props {
+  display: flex;
+  flex-direction: column;
+}
 
-#files-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 13px; color: var(--muted); }
-#files-bar button { width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--border); }
-#crumb { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#file-list { flex: 1; overflow: auto; columns: 3 240px; column-gap: 12px; }
-.item { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 8px; cursor: pointer; font-size: 15px; break-inside: avoid; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.item:hover { background: rgba(128,128,128,.18); }
-.item.sel { background: var(--accent); color: var(--bg); }
+#props h2 {
+  font-weight: 300; /* Gilroy Light */
+  text-align: center;
+  font-size: 28px;
+  margin: 10px 0 26px;
+  letter-spacing: 0.4px;
+}
 
-#about { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: grid; place-items: center; z-index: 10; }
-#about .card { background: var(--bg); padding: 28px; border-radius: 18px; text-align: center; min-width: 300px; }
-body.dark #about img { filter: invert(1); }
-.hidden { display: none !important; }
+dl {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 16px 12px;
+  font-size: 15px;
+  margin: 0 0 24px;
+}
+
+dt {
+  color: var(--muted);
+  font-weight: 300;
+}
+
+dd {
+  margin: 0;
+  word-break: break-all;
+  font-weight: 400;
+}
+
+/* Classificação de estrelas com Star.png */
+#p-stars {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.star-img {
+  width: 17px;
+  height: 17px;
+  object-fit: contain;
+  cursor: pointer;
+  opacity: 0.22;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.star-img.active {
+  opacity: 1;
+}
+
+body.dark .star-img {
+  filter: invert(1);
+}
+
+.star-img:hover {
+  transform: scale(1.15);
+}
+
+/* Botões de Ação no Painel Direito */
+.action-reveal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  font-size: 15px;
+  font-weight: 400;
+  transition: border-color 0.15s;
+}
+
+.action-reveal:hover {
+  border-color: var(--text);
+}
+
+.reveal-icon {
+  width: 17px;
+  height: 17px;
+  object-fit: contain;
+}
+
+body.dark .reveal-icon {
+  filter: invert(1);
+}
+
+.action {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  font-size: 13px;
+  font-weight: 300;
+  transition: border-color 0.15s;
+}
+
+.action:hover {
+  border-color: var(--text);
+}
+
+/* Marca d'água lateral oficial (Agrupar 2 copiar.png) */
+#watermark {
+  position: absolute;
+  bottom: 12px;
+  right: 8px;
+  opacity: 0.35;
+  pointer-events: none;
+  user-select: none;
+}
+
+#watermark img {
+  height: 110px;
+  object-fit: contain;
+}
+
+body.dark #watermark img {
+  filter: invert(1);
+}
+
+/* ---------- Filtros Rápidos (Todos, Imagens, PSD, Vídeos) ---------- */
+#filters button {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  font-size: 20px;
+  font-weight: 300; /* Gilroy Light */
+  padding: 10px 14px;
+  border-radius: 12px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.filter-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+body.dark .filter-icon {
+  filter: invert(1);
+}
+
+#filters button:hover {
+  background: var(--hover);
+}
+
+#filters button.active {
+  background: var(--active-btn);
+  color: var(--active-text);
+  font-weight: 500;
+}
+
+#filters button.active .filter-icon {
+  filter: invert(1);
+}
+
+body.dark #filters button.active .filter-icon {
+  filter: invert(0);
+}
+
+/* ---------- Lista de Pastas e Arquivos (Centro Inferior) ---------- */
+#files-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 300;
+}
+
+.view-toggle-icon {
+  height: 20px;
+  object-fit: contain;
+  cursor: pointer;
+  opacity: 0.85;
+  transition: opacity 0.15s;
+}
+
+.view-toggle-icon:hover {
+  opacity: 1;
+}
+
+body.dark .view-toggle-icon {
+  filter: invert(1);
+}
+
+#btn-up {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  transition: border-color 0.15s;
+}
+
+#btn-up:hover {
+  border-color: var(--text);
+}
+
+#crumb {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#file-list {
+  flex: 1;
+  overflow: auto;
+  columns: 3 240px;
+  column-gap: 16px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 17px;
+  font-weight: 300; /* Gilroy Light */
+  break-inside: avoid;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background 0.1s;
+}
+
+.item-file-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex: none;
+}
+
+body.dark .item-file-icon {
+  filter: invert(1);
+}
+
+.item:hover {
+  background: var(--hover);
+}
+
+.item.sel {
+  background: var(--active-btn);
+  color: var(--active-text);
+  font-weight: 500;
+}
+
+.item.sel .item-file-icon {
+  filter: invert(1);
+}
+
+body.dark .item.sel .item-file-icon {
+  filter: invert(0);
+}
+
+/* ---------- Modal Sobre ---------- */
+#about {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 100;
+  backdrop-filter: blur(4px);
+}
+
+#about .card {
+  background: var(--bg);
+  padding: 32px 36px;
+  border-radius: 20px;
+  text-align: center;
+  min-width: 320px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+}
+
+#about .card img {
+  height: 32px;
+  margin-bottom: 16px;
+}
+
+#about .card p {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--muted);
+  margin-bottom: 20px;
+  font-weight: 300;
+}
+
+.hidden {
+  display: none !important;
+}

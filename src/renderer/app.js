@@ -1,12 +1,22 @@
-/* PSD VIEW - renderer */
+/* ==========================================================================
+   PSD VIEW - Renderer Script com Suporte a Gilroy e Ícones Oficiais
+   ========================================================================== */
+
 const IMG = ['jpg','jpeg','png','gif','bmp','webp','svg','ico','avif','tif','tiff'];
 const VID = ['mp4','webm','mov','mkv','avi','m4v','ogv','wmv','flv'];
 const PSD = ['psd','psb'];
 
+const iconPaths = {
+  dir: '../../icons/Opened-Folder.png',
+  psd: '../../icons/Adobe-Photoshop.png',
+  image: '../../icons/Picture.png',
+  video: '../../icons/Clip-Appearance.png',
+  other: '../../icons/Docs.png'
+};
+
 const $ = (id) => document.getElementById(id);
 const ext = (n) => (n.includes('.') ? n.split('.').pop().toLowerCase() : '');
 const kind = (f) => f.isDir ? 'dir' : PSD.includes(ext(f.name)) ? 'psd' : IMG.includes(ext(f.name)) ? 'image' : VID.includes(ext(f.name)) ? 'video' : 'other';
-const icon = { dir: '📁', psd: 'Ps', image: '🖼', video: '🎞', other: '📄' };
 const fileUrl = (p) => 'file:///' + encodeURI(p.replace(/\\/g, '/')).replace(/#/g, '%23');
 const fmtSize = (b) => b >= 1073741824 ? (b / 1073741824).toFixed(2) + ' GB' : b >= 1048576 ? (b / 1048576).toFixed(2) + ' MB' : (b / 1024).toFixed(2) + ' KB';
 const fmtGB = (b) => (b / 1073741824).toFixed(1) + ' GB';
@@ -26,17 +36,21 @@ const state = {
   rating: store.get('ratings', {}), 
   favs: store.get('favs', []), 
   nav: { rot: 0, zoom: 1, x: 0, y: 0 }, 
-  token: 0 
+  token: 0,
+  viewCols: 3
 };
 
-/* ---------- Janela / tema ---------- */
+/* ---------- Janela / Tema ---------- */
 $('btn-min').onclick = () => api.minimize();
 $('btn-max').onclick = () => api.maximize();
 $('btn-close').onclick = () => api.close();
 
 function setTheme(dark) { 
   document.body.classList.toggle('dark', dark); 
-  $('btn-theme').textContent = dark ? '☾' : '☀'; 
+  const iconImg = $('icon-theme');
+  if (iconImg) {
+    iconImg.src = dark ? '../../icons/Moon-and-Stars.png' : '../../icons/Sun.png';
+  }
   store.set('dark', dark); 
 }
 $('btn-theme').onclick = () => setTheme(!document.body.classList.contains('dark'));
@@ -46,10 +60,10 @@ $('btn-about').onclick = () => $('about').classList.remove('hidden');
 $('about-close').onclick = () => $('about').classList.add('hidden');
 document.querySelectorAll('.group-head').forEach((h) => h.onclick = () => h.parentElement.classList.toggle('collapsed'));
 
-/* ---------- Navegação lateral ---------- */
+/* ---------- Navegação Lateral ---------- */
 function navButton(label, path) {
   const b = document.createElement('button');
-  b.textContent = label; 
+  b.innerHTML = `<img src="../../icons/Opened-Folder.png" class="sub-folder-icon" alt="" /><span>${label}</span>`; 
   b.title = path; 
   b.onclick = () => openDir(path);
   return b;
@@ -57,18 +71,37 @@ function navButton(label, path) {
 
 async function buildNav() {
   const home = await api.home();
-  const gs = $('g-sistema'); gs.innerHTML = '';
+  const gs = $('g-sistema'); 
+  gs.innerHTML = '';
   Object.entries(home).forEach(([k, v]) => gs.appendChild(navButton(k, v)));
   
   const drives = await api.drives();
-  const gd = $('g-discos'); gd.innerHTML = '';
+  const gd = $('g-discos'); 
+  gd.innerHTML = '';
   drives.forEach((d) => gd.appendChild(navButton(d.letter, d.path)));
   
-  const sl = $('storage-list'); sl.innerHTML = '';
-  drives.filter((d) => d.total).forEach((d) => {
+  const validDrives = drives.filter((d) => d.total);
+  const totalCap = validDrives.reduce((acc, d) => acc + (d.total || 0), 0);
+  const totalFree = validDrives.reduce((acc, d) => acc + (d.free || 0), 0);
+  const sumEl = $('storage-summary');
+  if (sumEl) {
+    sumEl.textContent = `${validDrives.length} unidades · ${fmtGB(totalFree)} livres de ${fmtGB(totalCap)}`;
+  }
+
+  const sl = $('storage-list'); 
+  sl.innerHTML = '';
+  validDrives.forEach((d) => {
     const p = Math.round((d.used / d.total) * 100);
-    const el = document.createElement('div'); el.className = 'drive';
-    el.innerHTML = `<div class="ring" style="--p:${p}" data-p="${p}%"></div><div><b>${d.letter}</b><br>${fmtGB(d.used)} usados · ${fmtGB(d.free)} livres de ${fmtGB(d.total)}</div>`;
+    const el = document.createElement('div'); 
+    el.className = 'drive-card';
+    el.innerHTML = `
+      <div class="ring" style="--p:${p}" data-p="${p}%"></div>
+      <div class="drive-info">
+        <div class="drive-letter">${d.letter}</div>
+        <div>${fmtGB(d.used)} usados · ${fmtGB(d.free)} livres de ${fmtGB(d.total)}</div>
+        <div style="font-size:10px; opacity:0.7">Interno · NTFS</div>
+      </div>
+    `;
     el.onclick = () => openDir(d.path);
     sl.appendChild(el);
   });
@@ -76,8 +109,12 @@ async function buildNav() {
 }
 
 function renderFavs() {
-  const g = $('g-favoritos'); g.innerHTML = '';
-  state.favs.forEach((p) => g.appendChild(navButton(p.split(/[\\/]/).filter(Boolean).pop() || p, p)));
+  const g = $('g-favoritos'); 
+  g.innerHTML = '';
+  state.favs.forEach((p) => {
+    const label = p.split(/[\\/]/).filter(Boolean).pop() || p;
+    g.appendChild(navButton(label, p));
+  });
 }
 
 $('btn-fav').onclick = () => {
@@ -88,7 +125,13 @@ $('btn-fav').onclick = () => {
   renderFavs();
 };
 
-/* ---------- Lista de arquivos ---------- */
+/* ---------- Alternância de Visualização da Lista ---------- */
+$('toggle-view').onclick = () => {
+  state.viewCols = state.viewCols === 3 ? 4 : state.viewCols === 4 ? 2 : 3;
+  $('file-list').style.columns = `${state.viewCols} 240px`;
+};
+
+/* ---------- Lista de Arquivos ---------- */
 async function openDir(dir) {
   try {
     const items = await api.readdir(dir);
@@ -117,9 +160,13 @@ function renderList() {
   list.slice(0, LIMIT).forEach((i) => {
     const el = document.createElement('div');
     el.className = 'item' + (state.selected?.path === i.path ? ' sel' : '');
-    el.textContent = `${icon[i.kind]} ${i.name}`; 
     el.title = i.name; 
     el.dataset.path = i.path;
+    
+    // Ícone oficial baseado no tipo de arquivo
+    const iconSrc = iconPaths[i.kind] || iconPaths.other;
+    el.innerHTML = `<img src="${iconSrc}" class="item-file-icon" alt="" /><span>${i.name}</span>`;
+    
     el.onclick = () => select(i, el);
     el.ondblclick = () => i.isDir && openDir(i.path);
     frag.appendChild(el);
@@ -147,7 +194,7 @@ document.querySelectorAll('#filters button').forEach((b) => b.onclick = () => {
   renderList();
 });
 
-/* ---------- Seleção / preview / propriedades ---------- */
+/* ---------- Seleção / Preview / Propriedades ---------- */
 function select(item, el) {
   state.selected = item;
   document.querySelectorAll('.item.sel').forEach((x) => x.classList.remove('sel'));
@@ -164,7 +211,7 @@ function select(item, el) {
 function showProps(item) {
   $('p-tipo').textContent = item.isDir ? 'Pasta' : item.name;
   $('p-tam').textContent = item.isDir ? '—' : fmtSize(item.size);
-  $('p-cam').textContent = item.path.length > 38 ? '…' + item.path.slice(-36) : item.path;
+  $('p-cam').textContent = item.path.length > 34 ? '…' + item.path.slice(-32) : item.path;
   $('p-cam').title = item.path;
   $('p-mod').textContent = new Date(item.mtime).toLocaleDateString('pt-BR');
   $('p-dim').textContent = '—'; 
@@ -173,12 +220,14 @@ function showProps(item) {
 }
 
 function renderStars() {
-  const box = $('p-stars'); box.innerHTML = '';
+  const box = $('p-stars'); 
+  box.innerHTML = '';
   const cur = state.selected ? state.rating[state.selected.path] || 0 : 0;
   for (let n = 1; n <= 5; n++) {
-    const s = document.createElement('span'); 
-    s.textContent = '★'; 
-    if (n <= cur) s.className = 'on';
+    const s = document.createElement('img'); 
+    s.src = '../../icons/Star.png';
+    s.className = 'star-img' + (n <= cur ? ' active' : '');
+    s.title = `${n} estrela(s)`;
     s.onclick = () => {
       if (!state.selected) return;
       state.rating[state.selected.path] = cur === n ? 0 : n;
@@ -243,10 +292,12 @@ $('btn-rotate').onclick = () => {
 function showGenericPreview(item) {
   const stage = $('stage');
   state.nav = { rot: 0, zoom: 1, x: 0, y: 0 };
+  const iconSrc = iconPaths[item.kind] || iconPaths.other;
+  
   if (item.isDir) {
     stage.innerHTML = `
       <div class="file-card-preview">
-        <div class="icon">📁</div>
+        <img src="${iconSrc}" class="icon-img" alt="" />
         <div class="title">${item.name}</div>
         <div class="meta">Pasta de arquivos</div>
         <button class="action" id="card-open-btn">Abrir pasta ↵</button>
@@ -256,7 +307,7 @@ function showGenericPreview(item) {
     const e = ext(item.name).toUpperCase() || 'ARQUIVO';
     stage.innerHTML = `
       <div class="file-card-preview">
-        <div class="icon">${icon[item.kind] || '📄'}</div>
+        <img src="${iconSrc}" class="icon-img" alt="" />
         <div class="title">${item.name}</div>
         <div class="meta">${e} • ${fmtSize(item.size)}</div>
         <button class="action" id="card-open-btn">Abrir no programa padrão ↗</button>
@@ -316,7 +367,7 @@ async function preview(item) {
   applyTransform();
 }
 
-/* ---------- Zoom / mover / girar / navegar ---------- */
+/* ---------- Zoom / Mover / Girar / Navegar ---------- */
 function applyTransform() {
   const n = $('stage').querySelector('.preview-media');
   if (!n) return;
@@ -389,7 +440,6 @@ window.addEventListener('keydown', (e) => {
 /* ---------- Início ---------- */
 (async () => {
   await buildNav();
-  const home = await api.home();
-  // Abre a pasta inicial (Imagens ou a própria pasta atual do app)
+  // Abre a pasta inicial atual do projeto
   openDir('c:\\Users\\cviol\\PSD_view');
 })();
