@@ -99,6 +99,8 @@ async function buildNav() {
     const p = Math.round((d.used / d.total) * 100);
     const el = document.createElement('div'); 
     el.className = 'drive-card';
+    el.dataset.letter = d.letter;
+    el.dataset.path = d.path;
     el.innerHTML = `
       <div class="ring" style="--p:${p}" data-p="${p}%"></div>
       <div class="drive-info">
@@ -110,6 +112,7 @@ async function buildNav() {
     el.onclick = () => openDir(d.path);
     sl.appendChild(el);
   });
+  updateActiveDrive();
   renderFavs();
 }
 
@@ -214,6 +217,19 @@ if (toggleViewBtn) {
   };
 }
 
+function updateActiveDrive() {
+  const currentDir = state.dir || '';
+  const currentDrive = currentDir.match(/^([a-zA-Z]):/)?.[1]?.toUpperCase();
+  document.querySelectorAll('.drive-card').forEach((card) => {
+    const letter = card.dataset.letter?.replace(':', '').toUpperCase();
+    if (letter && currentDrive && letter === currentDrive) {
+      card.classList.add('active');
+    } else {
+      card.classList.remove('active');
+    }
+  });
+}
+
 /* ---------- Lista de Arquivos ---------- */
 async function openDir(dir) {
   try {
@@ -224,6 +240,7 @@ async function openDir(dir) {
     $('crumb').textContent = dir;
     renderList();
     updateFavBtn();
+    updateActiveDrive();
   } catch (e) {
     $('crumb').textContent = 'Não foi possível abrir: ' + dir;
   }

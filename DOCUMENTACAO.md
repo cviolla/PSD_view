@@ -80,6 +80,7 @@ Card horizontal posicionado no topo, logo acima da janela de preview, exibindo a
 - GB usados, GB livres e capacidade total
 - Tipo (Interno) e sistema de arquivos (NTFS)
 - Cabeçalho com total: nº de unidades e espaço livre somado
+- **Seleção e hover sutis:** efeito translúcido discreto sem contornos fluorescentes excessivos, mantendo elegância visual e foco no conteúdo.
 
 ### 2.4 Painel esquerdo inferior — Filtros rápidos
 **Todos · Imagens · PSD · Vídeos** — filtram a lista de arquivos pelo tipo, com indicador na cor `#e4ff00`.

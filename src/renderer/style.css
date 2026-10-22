@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    PSD VIEW - Folha de Estilos com Família Gilroy e Ícones Oficiais (-10% scale)
    ========================================================================== */
 
@@ -97,6 +97,28 @@ body.dark {
 
 * {
   box-sizing: border-box;
+}
+
+/* ---------- Barras de Rolagem Customizadas ---------- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+body:not(.dark) ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+}
+body:not(.dark) ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.35);
 }
 
 html, body {
@@ -517,13 +539,24 @@ body.dark .storage-icon {
   flex: 1 1 0;
   min-width: 165px;
   max-width: 320px;
-  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  transition: transform 0.15s, border-color 0.15s, background 0.15s, box-shadow 0.15s;
 }
 
 .drive-card:hover {
-  border-color: var(--accent);
+  border-color: rgba(255, 255, 255, 0.22);
+  background: var(--hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(228, 255, 0, 0.18);
+}
+
+.drive-card.active {
+  background: var(--sel-bg);
+  border-color: var(--sel-border);
+  box-shadow: 0 0 10px rgba(228, 255, 0, 0.10);
+}
+
+.drive-card.active:hover {
+  border-color: var(--sel-border);
+  background: var(--sel-bg);
 }
 
 .ring {
@@ -1018,18 +1051,21 @@ body.dark .filter-icon {
 
 #file-list {
   flex: 1;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 2px 4px 6px 0;
 }
 
 #file-list.view-columns {
-  columns: 3 220px;
-  column-gap: 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 3px 12px;
+  align-content: start;
 }
 
 #file-list.view-list {
   display: flex;
   flex-direction: column;
-  columns: 1 !important;
   gap: 2px;
 }
 
@@ -1042,18 +1078,27 @@ body.dark .filter-icon {
   display: flex;
   align-items: center;
   gap: 9px;
-  padding: 4.5px 8px;
+  padding: 4px 8px;
+  min-height: 29px;
+  line-height: 1.4;
   border-radius: 7px;
   border: 1px solid transparent;
   cursor: pointer;
-  font-size: 15px; /* -10% */
+  font-size: 14.5px; /* -10% */
   font-weight: 300; /* Gilroy Light */
-  break-inside: avoid;
-  white-space: nowrap;
+  color: var(--text);
+  box-sizing: border-box;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.item span {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: var(--text);
-  transition: background 0.1s, border-color 0.1s;
+  white-space: nowrap;
+  line-height: 1.4;
+  padding-bottom: 1px;
 }
 
 .item-file-icon {

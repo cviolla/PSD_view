@@ -6,7 +6,7 @@
   "scripts": {
     "start": "electron .",
     "icons": "powershell -ExecutionPolicy Bypass -File build/make-icons.ps1",
-    "dist": "electron-builder --win portable"
+    "dist": "powershell -ExecutionPolicy Bypass -File build/build-and-sign.ps1"
   },
   "author": "Cristiano Violla",
   "license": "UNLICENSED",
