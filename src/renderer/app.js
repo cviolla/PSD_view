@@ -323,7 +323,25 @@ function prefetch(item) {
 }
 
 function fitToScreen() {
-  state.nav = { rot: 0, zoom: 1, x: 0, y: 0 };
+  const n = $('stage').querySelector('.preview-media');
+  if (n) {
+    const natW = n.naturalWidth || n.width || 0;
+    const natH = n.naturalHeight || n.height || 0;
+    if (natW > 0 && natH > 0 && (natW < 260 || natH < 260)) {
+      const targetSize = 250;
+      const maxDim = Math.max(natW, natH);
+      state.nav.zoom = Math.min(12, Math.max(1, Math.round((targetSize / maxDim) * 10) / 10));
+      n.style.imageRendering = 'pixelated';
+    } else {
+      state.nav.zoom = 1;
+      n.style.imageRendering = 'auto';
+    }
+  } else {
+    state.nav.zoom = 1;
+  }
+  state.nav.rot = 0;
+  state.nav.x = 0;
+  state.nav.y = 0;
   applyTransform();
 }
 
@@ -340,6 +358,20 @@ $('btn-rotate').onclick = () => {
   state.nav.rot = (state.nav.rot + 90) % 360;
   applyTransform();
 };
+
+const bgModes = ['default', 'bg-checker', 'bg-white', 'bg-black'];
+let curBgIdx = 0;
+const bgBtn = $('btn-bg');
+if (bgBtn) {
+  bgBtn.onclick = () => {
+    const stage = $('stage');
+    bgModes.forEach((m) => stage.classList.remove(m));
+    curBgIdx = (curBgIdx + 1) % bgModes.length;
+    if (bgModes[curBgIdx] !== 'default') {
+      stage.classList.add(bgModes[curBgIdx]);
+    }
+  };
+}
 
 function showGenericPreview(item) {
   const stage = $('stage');
@@ -413,6 +445,21 @@ async function preview(item) {
   }
   
   if (token !== state.token) return; // Usuário já trocou de arquivo
+  
+  // Escala inteligente para ícones e arquivos pequenos (< 260px)
+  const natW = node.naturalWidth || node.width || 0;
+  const natH = node.naturalHeight || node.height || 0;
+  if (natW > 0 && natH > 0 && (natW < 260 || natH < 260)) {
+    const targetSize = 250;
+    const maxDim = Math.max(natW, natH);
+    const fitScale = Math.min(12, Math.max(1, Math.round((targetSize / maxDim) * 10) / 10));
+    state.nav.zoom = fitScale;
+    node.style.imageRendering = 'pixelated';
+  } else {
+    state.nav.zoom = 1;
+    node.style.imageRendering = 'auto';
+  }
+
   $('p-time').textContent = Math.round(performance.now() - t0) + ' ms';
   stage.innerHTML = ''; 
   stage.appendChild(node); 
