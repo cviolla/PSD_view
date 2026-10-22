@@ -108,25 +108,34 @@ async function buildNav() {
   renderFavs();
 }
 
+function getFolderDisplayName(fullPath) {
+  if (!fullPath) return 'Pasta';
+  const clean = String(fullPath).replace(/[\\/]+$/, '');
+  if (/^[a-zA-Z]:$/.test(clean)) return clean;
+  const parts = clean.split(/[\\/]/).filter(Boolean);
+  return parts.pop() || clean || fullPath;
+}
+
 function renderFavs() {
   const g = $('g-favoritos'); 
   g.innerHTML = '';
   if (!state.favs.length) {
     const empty = document.createElement('div');
-    empty.style.cssText = 'font-size: 11.5px; color: var(--muted); padding: 4px 10px; font-weight: 300;';
+    empty.style.cssText = 'font-size: 11.5px; color: var(--muted); padding: 5px 8px; font-weight: 300;';
     empty.textContent = 'Nenhuma pasta favoritada';
     g.appendChild(empty);
     updateFavBtn();
     return;
   }
   state.favs.forEach((p) => {
-    const label = p.split(/[\\/]/).filter(Boolean).pop() || p;
+    const label = getFolderDisplayName(p);
     const item = document.createElement('div');
     item.className = 'fav-item';
+    item.title = p;
     item.innerHTML = `
-      <button class="fav-link" title="${p}">
+      <button class="fav-link">
         <img src="../../icons/Opened-Folder.png" class="sub-folder-icon" alt="" />
-        <span>${label}</span>
+        <span class="fav-label">${label}</span>
       </button>
       <button class="fav-del-btn" title="Remover dos favoritos">✕</button>
     `;

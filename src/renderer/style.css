@@ -320,7 +320,8 @@ body.dark .chevron-icon {
   padding: 3px 0 5px 32px;
 }
 
-.group-body button {
+.group-body > button,
+.group-body .nav-btn {
   display: flex;
   align-items: center;
   gap: 7px;
@@ -334,9 +335,11 @@ body.dark .chevron-icon {
   overflow: hidden;
   text-overflow: ellipsis;
   transition: background 0.15s;
+  color: var(--text);
 }
 
-.group-body button:hover {
+.group-body > button:hover,
+.group-body .nav-btn:hover {
   background: var(--hover);
 }
 
@@ -344,6 +347,7 @@ body.dark .chevron-icon {
   width: 13.5px; /* -10% */
   height: 13.5px; /* -10% */
   object-fit: contain;
+  flex: none;
 }
 
 body.dark .sub-folder-icon {
@@ -354,51 +358,70 @@ body.dark .sub-folder-icon {
 .fav-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   width: 100%;
   border-radius: 7px;
   transition: background 0.15s;
-  padding-right: 4px;
+  padding: 0 4px 0 0;
+  box-sizing: border-box;
+  position: relative;
 }
 
 .fav-item:hover {
   background: var(--hover);
 }
 
-.fav-item button.fav-link {
+.fav-item .fav-link {
   display: flex;
   align-items: center;
   gap: 7px;
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0; /* Permite que o texto trunque sem esmagar o botão */
   text-align: left;
   padding: 5px 8px;
-  font-size: 13.5px; /* -10% */
+  font-size: 13.5px;
   font-weight: 300;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text);
 }
 
-.fav-del-btn {
-  display: none;
-  width: 20px;
-  height: 20px;
+.fav-item .fav-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.fav-item .fav-del-btn {
+  display: flex !important;
+  opacity: 0;
+  visibility: hidden;
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  max-width: 20px !important;
+  padding: 0 !important;
   border-radius: 50%;
   align-items: center;
   justify-content: center;
   font-size: 11px;
   color: var(--muted);
   background: transparent;
-  flex: none;
-  transition: background 0.15s, color 0.15s;
+  border: none;
+  flex: 0 0 20px !important;
+  transition: opacity 0.15s, background 0.15s, color 0.15s;
   cursor: pointer;
 }
 
 .fav-item:hover .fav-del-btn {
-  display: flex;
+  opacity: 1;
+  visibility: visible;
 }
 
-.fav-del-btn:hover {
+.fav-item .fav-del-btn:hover {
   background: rgba(229, 72, 77, 0.18);
   color: #e5484d;
 }
