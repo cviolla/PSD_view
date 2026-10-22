@@ -31,7 +31,13 @@
     </aside>
 
     <section id="viewer">
-      <div id="stage"><div id="placeholder">Selecione uma imagem, PSD ou vídeo</div></div>
+      <div id="viewer-tools">
+        <button id="btn-fit" title="Adequar à tela (Reset Zoom)">⛶</button>
+        <button id="btn-zoom-in" title="Aumentar zoom">+</button>
+        <button id="btn-zoom-out" title="Diminuir zoom">−</button>
+        <button id="btn-rotate" title="Girar 90° (R)">↻</button>
+      </div>
+      <div id="stage"><div id="placeholder">Selecione um arquivo para pré-visualizar</div></div>
       <div id="hint">Roda do mouse / ← →: Navegar • Ctrl + Roda: Zoom • Arraste: Mover • R: Girar • Esc: Fechar</div>
     </section>
 
@@ -46,6 +52,7 @@
         <dt>Dimensões</dt><dd id="p-dim">—</dd>
         <dt>Tempo de leitura</dt><dd id="p-time">—</dd>
       </dl>
+      <button id="btn-open-app" class="action">Abrir no programa padrão ↗</button>
       <button id="btn-reveal" class="action">Mostrar no explorer ⇱</button>
       <button id="btn-fav" class="action">♥ Favoritar pasta atual</button>
     </aside>

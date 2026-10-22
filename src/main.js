@@ -4,6 +4,17 @@ const fs = require('fs');
 const os = require('os');
 const { execFile } = require('child_process');
 
+// Flags para evitar conflitos de GPU/shader cache e travamentos de permissão no Windows
+app.commandLine.appendSwitch('disable-gpu-shader-disk-cache');
+app.commandLine.appendSwitch('disable-gpu-process-crash-limit');
+
+// Garante apenas uma instância ativa do app para não conflitar pastas de cache
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  app.quit();
+  process.exit(0);
+}
+
 let win;
 
 function createWindow() {
@@ -25,6 +36,13 @@ function createWindow() {
   win.setMenuBarVisibility(false);
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 }
+
+app.on('second-instance', () => {
+  if (win) {
+    if (win.isMinimized()) win.restore();
+    win.focus();
+  }
+});
 
 app.whenReady().then(createWindow);
 app.on('window-all-closed', () => app.quit());
@@ -68,6 +86,7 @@ ipcMain.handle('fs:stat', async (_e, file) => {
 });
 
 ipcMain.on('fs:reveal', (_e, file) => shell.showItemInFolder(file));
+ipcMain.on('fs:open', (_e, file) => shell.openPath(file));
 
 // ---- Discos (Windows) ----
 function listDrives() {
