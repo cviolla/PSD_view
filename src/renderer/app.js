@@ -111,24 +111,66 @@ async function buildNav() {
 function renderFavs() {
   const g = $('g-favoritos'); 
   g.innerHTML = '';
+  if (!state.favs.length) {
+    const empty = document.createElement('div');
+    empty.style.cssText = 'font-size: 11.5px; color: var(--muted); padding: 4px 10px; font-weight: 300;';
+    empty.textContent = 'Nenhuma pasta favoritada';
+    g.appendChild(empty);
+    updateFavBtn();
+    return;
+  }
   state.favs.forEach((p) => {
     const label = p.split(/[\\/]/).filter(Boolean).pop() || p;
-    g.appendChild(navButton(label, p));
+    const item = document.createElement('div');
+    item.className = 'fav-item';
+    item.innerHTML = `
+      <button class="fav-link" title="${p}">
+        <img src="../../icons/Opened-Folder.png" class="sub-folder-icon" alt="" />
+        <span>${label}</span>
+      </button>
+      <button class="fav-del-btn" title="Remover dos favoritos">✕</button>
+    `;
+    item.querySelector('.fav-link').onclick = () => openDir(p);
+    item.querySelector('.fav-del-btn').onclick = (e) => {
+      e.stopPropagation();
+      state.favs = state.favs.filter((f) => f !== p);
+      store.set('favs', state.favs);
+      renderFavs();
+      updateFavBtn();
+    };
+    g.appendChild(item);
   });
+  updateFavBtn();
+}
+
+function updateFavBtn() {
+  const btn = $('btn-fav');
+  if (!btn) return;
+  if (state.dir && state.favs.includes(state.dir)) {
+    btn.textContent = '♥ Remover dos favoritos';
+    btn.style.color = '#e5484d';
+  } else {
+    btn.textContent = '♥ Favoritar pasta atual';
+    btn.style.color = 'var(--text)';
+  }
 }
 
 $('btn-fav').onclick = () => {
   if (!state.dir) return;
-  if (state.favs.includes(state.dir)) state.favs = state.favs.filter((f) => f !== state.dir);
-  else state.favs.push(state.dir);
+  if (state.favs.includes(state.dir)) {
+    state.favs = state.favs.filter((f) => f !== state.dir);
+  } else {
+    state.favs.push(state.dir);
+  }
   store.set('favs', state.favs); 
   renderFavs();
+  updateFavBtn();
 };
 
 /* ---------- Alternância de Visualização da Lista ---------- */
 $('toggle-view').onclick = () => {
   state.viewCols = state.viewCols === 3 ? 4 : state.viewCols === 4 ? 2 : 3;
-  $('file-list').style.columns = `${state.viewCols} 240px`;
+  $('file-list').style.columns = `${state.viewCols} 220px`;
 };
 
 /* ---------- Lista de Arquivos ---------- */
@@ -140,6 +182,7 @@ async function openDir(dir) {
       .sort((a, b) => (b.isDir - a.isDir) || a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
     $('crumb').textContent = dir;
     renderList();
+    updateFavBtn();
   } catch (e) {
     $('crumb').textContent = 'Não foi possível abrir: ' + dir;
   }

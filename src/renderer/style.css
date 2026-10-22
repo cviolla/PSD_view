@@ -1,5 +1,5 @@
 /* ==========================================================================
-   PSD VIEW - Folha de Estilos com Família Gilroy e Ícones Oficiais
+   PSD VIEW - Folha de Estilos com Família Gilroy e Ícones Oficiais (-10% scale)
    ========================================================================== */
 
 /* ---------- Registro da Família de Fontes Gilroy ---------- */
@@ -119,11 +119,11 @@ button {
 
 /* ---------- Barra Superior (Titlebar) ---------- */
 #titlebar {
-  height: 58px;
+  height: 52px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
+  padding: 0 22px;
   -webkit-app-region: drag;
   flex: none;
 }
@@ -135,11 +135,11 @@ button {
 .brand {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 18px;
 }
 
 #logo {
-  height: 24px;
+  height: 21.5px; /* -10% */
   object-fit: contain;
 }
 
@@ -149,7 +149,7 @@ body.dark #logo {
 
 .link {
   color: var(--muted);
-  font-size: 17px;
+  font-size: 15px; /* -10% */
   font-weight: 300;
   transition: color 0.15s;
 }
@@ -161,12 +161,12 @@ body.dark #logo {
 .win-controls {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .win-controls button {
-  width: 34px;
-  height: 34px;
+  width: 30px; /* -10% */
+  height: 30px; /* -10% */
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -183,8 +183,8 @@ body.dark #logo {
 }
 
 .app-icon {
-  width: 18px;
-  height: 18px;
+  width: 16px; /* -10% */
+  height: 16px; /* -10% */
   object-fit: contain;
   transition: filter 0.15s;
 }
@@ -202,10 +202,10 @@ body.dark .app-icon {
   flex: 1;
   min-height: 0;
   display: grid;
-  gap: 16px;
-  padding: 0 24px 20px 24px;
-  grid-template-columns: 280px 1fr 310px;
-  grid-template-rows: 1fr 270px;
+  gap: 14px;
+  padding: 0 22px 18px 22px;
+  grid-template-columns: 265px 1fr 295px;
+  grid-template-rows: 1fr 255px;
   grid-template-areas:
     "nav viewer props"
     "filters files props";
@@ -214,8 +214,8 @@ body.dark .app-icon {
 .panel {
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 16px;
+  border-radius: 18px;
+  padding: 14px;
   overflow: auto;
   position: relative;
 }
@@ -223,24 +223,24 @@ body.dark .app-icon {
 #nav { grid-area: nav; display: flex; flex-direction: column; }
 #viewer { grid-area: viewer; }
 #props { grid-area: props; }
-#filters { grid-area: filters; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
-#files { grid-area: files; display: flex; flex-direction: column; padding: 14px 18px; }
+#filters { grid-area: filters; display: flex; flex-direction: column; justify-content: center; gap: 7px; }
+#files { grid-area: files; display: flex; flex-direction: column; padding: 12px 16px; }
 
 /* ---------- Barra de Busca com Ícone Search ---------- */
 .search-box {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 999px;
-  padding: 8px 16px;
-  margin-bottom: 16px;
+  padding: 7px 14px;
+  margin-bottom: 14px;
 }
 
 .search-icon {
-  width: 16px;
-  height: 16px;
+  width: 14.5px; /* -10% */
+  height: 14.5px; /* -10% */
   object-fit: contain;
   opacity: 0.8;
 }
@@ -254,7 +254,7 @@ body.dark .search-icon {
   background: transparent;
   color: var(--text);
   font-family: inherit;
-  font-size: 15px;
+  font-size: 13.5px; /* -10% */
   font-weight: 300;
   width: 100%;
   outline: none;
@@ -262,7 +262,7 @@ body.dark .search-icon {
 
 /* ---------- Grupos de Navegação (Sistema, Discos, Favoritos) ---------- */
 .group {
-  margin-bottom: 6px;
+  margin-bottom: 5px;
 }
 
 .group-head {
@@ -270,8 +270,8 @@ body.dark .search-icon {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 6px;
-  border-radius: 10px;
+  padding: 7px 5px;
+  border-radius: 9px;
   transition: background 0.15s;
 }
 
@@ -282,14 +282,14 @@ body.dark .search-icon {
 .head-left {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 21px;
+  gap: 11px;
+  font-size: 19px; /* -10% */
   font-weight: 300; /* Gilroy Light */
 }
 
 .head-icon {
-  width: 22px;
-  height: 22px;
+  width: 20px; /* -10% */
+  height: 20px; /* -10% */
   object-fit: contain;
 }
 
@@ -298,8 +298,8 @@ body.dark .head-icon {
 }
 
 .chevron-icon {
-  width: 18px;
-  height: 18px;
+  width: 16px; /* -10% */
+  height: 16px; /* -10% */
   object-fit: contain;
   transition: transform 0.2s;
 }
@@ -317,19 +317,19 @@ body.dark .chevron-icon {
 }
 
 .group-body {
-  padding: 4px 0 6px 36px;
+  padding: 3px 0 5px 32px;
 }
 
 .group-body button {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   width: 100%;
   text-align: left;
-  padding: 6px 10px;
-  font-size: 15px;
+  padding: 5px 9px;
+  font-size: 13.5px; /* -10% */
   font-weight: 300;
-  border-radius: 8px;
+  border-radius: 7px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -341,8 +341,8 @@ body.dark .chevron-icon {
 }
 
 .sub-folder-icon {
-  width: 15px;
-  height: 15px;
+  width: 13.5px; /* -10% */
+  height: 13.5px; /* -10% */
   object-fit: contain;
 }
 
@@ -350,28 +350,81 @@ body.dark .sub-folder-icon {
   filter: invert(1);
 }
 
+/* ---------- Item de Favoritos com Botão de Excluir ---------- */
+.fav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border-radius: 7px;
+  transition: background 0.15s;
+  padding-right: 4px;
+}
+
+.fav-item:hover {
+  background: var(--hover);
+}
+
+.fav-item button.fav-link {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: 1;
+  text-align: left;
+  padding: 5px 8px;
+  font-size: 13.5px; /* -10% */
+  font-weight: 300;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fav-del-btn {
+  display: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--muted);
+  background: transparent;
+  flex: none;
+  transition: background 0.15s, color 0.15s;
+  cursor: pointer;
+}
+
+.fav-item:hover .fav-del-btn {
+  display: flex;
+}
+
+.fav-del-btn:hover {
+  background: rgba(229, 72, 77, 0.18);
+  color: #e5484d;
+}
+
 /* ---------- Armazenamento (Discos) ---------- */
 #storage {
   margin-top: auto;
-  padding-top: 14px;
+  padding-top: 12px;
 }
 
 .storage-title-wrap {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 9px;
 }
 
 .storage-title-wrap h3 {
-  font-size: 14px;
+  font-size: 12.5px; /* -10% */
   font-weight: 600;
   margin: 0;
   text-transform: capitalize;
 }
 
 .storage-summary {
-  font-size: 11px;
+  font-size: 10px; /* -10% */
   color: var(--muted);
   font-weight: 300;
 }
@@ -379,11 +432,11 @@ body.dark .sub-folder-icon {
 .drive-card {
   background: var(--card-bg);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 10px 12px;
-  margin-bottom: 8px;
+  border-radius: 11px;
+  padding: 8px 10px;
+  margin-bottom: 7px;
   display: flex;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
   cursor: pointer;
   transition: transform 0.1s, border-color 0.15s;
@@ -396,13 +449,13 @@ body.dark .sub-folder-icon {
 
 .ring {
   --p: 0;
-  width: 44px;
-  height: 44px;
+  width: 39px; /* -10% */
+  height: 39px; /* -10% */
   border-radius: 50%;
   flex: none;
   display: grid;
   place-items: center;
-  font-size: 11px;
+  font-size: 10px; /* -10% */
   font-weight: 700;
   color: var(--text);
   background: conic-gradient(var(--text) calc(var(--p) * 1%), var(--border) 0);
@@ -412,7 +465,7 @@ body.dark .sub-folder-icon {
 .ring::after {
   content: attr(data-p);
   position: absolute;
-  inset: 5px;
+  inset: 4.5px;
   border-radius: 50%;
   background: var(--card-bg);
   display: grid;
@@ -421,12 +474,12 @@ body.dark .sub-folder-icon {
 
 .drive-info {
   line-height: 1.35;
-  font-size: 11px;
+  font-size: 10px; /* -10% */
   color: var(--muted);
 }
 
 .drive-letter {
-  font-size: 14px;
+  font-size: 12.5px; /* -10% */
   font-weight: 700;
   color: var(--text);
 }
@@ -434,7 +487,7 @@ body.dark .sub-folder-icon {
 /* ---------- Visualizador (Viewer & Stage) ---------- */
 #viewer {
   background: var(--stage);
-  border-radius: 20px;
+  border-radius: 18px;
   position: relative;
   overflow: hidden;
   border: 1px solid var(--border);
@@ -442,26 +495,26 @@ body.dark .sub-folder-icon {
 
 #viewer-tools {
   position: absolute;
-  top: 14px;
-  right: 16px;
+  top: 12px;
+  right: 14px;
   display: flex;
-  gap: 6px;
+  gap: 5px;
   z-index: 5;
   background: rgba(20, 24, 30, 0.7);
   backdrop-filter: blur(10px);
-  padding: 4px 8px;
+  padding: 4px 7px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 #viewer-tools button {
-  width: 28px;
-  height: 28px;
+  width: 25px; /* -10% */
+  height: 25px; /* -10% */
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 12.5px; /* -10% */
   color: #ffffff;
   transition: background 0.15s, transform 0.1s;
 }
@@ -479,7 +532,7 @@ body.dark .sub-folder-icon {
   justify-content: center;
   overflow: hidden;
   cursor: grab;
-  padding: 24px 24px 50px 24px;
+  padding: 20px 20px 46px 20px;
   box-sizing: border-box;
 }
 
@@ -496,8 +549,8 @@ body.dark .sub-folder-icon {
   object-fit: contain;
   display: block;
   margin: auto;
-  border-radius: 8px;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
+  border-radius: 7px;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.6);
   transform-origin: center center;
   user-select: none;
   -webkit-user-drag: none;
@@ -514,32 +567,32 @@ body.dark .sub-folder-icon {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 12px;
   color: #ffffff;
   text-align: center;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  padding: 36px;
-  border-radius: 20px;
+  padding: 32px;
+  border-radius: 18px;
   backdrop-filter: blur(12px);
 }
 
 .file-card-preview .icon-img {
-  width: 60px;
-  height: 60px;
+  width: 54px; /* -10% */
+  height: 54px; /* -10% */
   object-fit: contain;
   filter: invert(1);
 }
 
 .file-card-preview .title {
-  font-size: 19px;
+  font-size: 17px; /* -10% */
   font-weight: 500;
-  max-width: 340px;
+  max-width: 310px;
   word-break: break-all;
 }
 
 .file-card-preview .meta {
-  font-size: 13px;
+  font-size: 11.5px; /* -10% */
   color: #a0a6b5;
   font-weight: 300;
 }
@@ -548,19 +601,19 @@ body.dark .sub-folder-icon {
   background: #ffffff;
   color: #000000 !important;
   font-family: inherit;
-  font-size: 14px;
+  font-size: 12.5px; /* -10% */
   font-weight: 600;
-  padding: 10px 24px;
+  padding: 9px 21px; /* -10% */
   border-radius: 999px;
   border: none;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 7px;
   transition: transform 0.15s, background 0.15s, box-shadow 0.15s;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
-  margin-top: 8px;
+  margin-top: 7px;
 }
 
 .file-card-preview .card-btn:hover {
@@ -575,21 +628,21 @@ body.dark .sub-folder-icon {
 
 #placeholder {
   color: #666666;
-  font-size: 16px;
+  font-size: 14.5px; /* -10% */
   font-weight: 300;
 }
 
 #hint {
   position: absolute;
-  bottom: 12px;
+  bottom: 11px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 11px;
+  font-size: 10px; /* -10% */
   font-weight: 400;
   color: #adb5bd;
   background: rgba(20, 25, 35, 0.85);
   backdrop-filter: blur(8px);
-  padding: 5px 20px;
+  padding: 4.5px 18px;
   border-radius: 999px;
   white-space: nowrap;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -605,17 +658,17 @@ body.dark .sub-folder-icon {
 #props h2 {
   font-weight: 300; /* Gilroy Light */
   text-align: center;
-  font-size: 28px;
-  margin: 10px 0 26px;
+  font-size: 25px; /* -10% */
+  margin: 8px 0 22px;
   letter-spacing: 0.4px;
 }
 
 dl {
   display: grid;
-  grid-template-columns: 120px 1fr;
-  gap: 16px 12px;
-  font-size: 15px;
-  margin: 0 0 24px;
+  grid-template-columns: 108px 1fr;
+  gap: 14px 10px;
+  font-size: 13.5px; /* -10% */
+  margin: 0 0 20px;
 }
 
 dt {
@@ -637,8 +690,8 @@ dd {
 }
 
 .star-img {
-  width: 17px;
-  height: 17px;
+  width: 15px; /* -10% */
+  height: 15px; /* -10% */
   object-fit: contain;
   cursor: pointer;
   opacity: 0.22;
@@ -663,13 +716,13 @@ body.dark .star-img {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 12px 14px;
-  border-radius: 12px;
-  margin-bottom: 10px;
+  padding: 10px 12px;
+  border-radius: 11px;
+  margin-bottom: 9px;
   background: var(--bg);
   color: var(--text);
   border: 1px solid var(--border);
-  font-size: 15px;
+  font-size: 13.5px; /* -10% */
   font-weight: 400;
   transition: border-color 0.15s;
 }
@@ -679,8 +732,8 @@ body.dark .star-img {
 }
 
 .reveal-icon {
-  width: 17px;
-  height: 17px;
+  width: 15px; /* -10% */
+  height: 15px; /* -10% */
   object-fit: contain;
 }
 
@@ -692,13 +745,13 @@ body.dark .reveal-icon {
   display: block;
   width: 100%;
   text-align: left;
-  padding: 10px 14px;
-  border-radius: 12px;
-  margin-bottom: 8px;
+  padding: 9px 12px;
+  border-radius: 11px;
+  margin-bottom: 7px;
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
-  font-size: 13px;
+  font-size: 11.5px; /* -10% */
   font-weight: 300;
   transition: border-color 0.15s;
 }
@@ -710,15 +763,15 @@ body.dark .reveal-icon {
 /* Marca d'água lateral oficial (Agrupar 2 copiar.png) */
 #watermark {
   position: absolute;
-  bottom: 12px;
-  right: 8px;
+  bottom: 10px;
+  right: 6px;
   opacity: 0.35;
   pointer-events: none;
   user-select: none;
 }
 
 #watermark img {
-  height: 110px;
+  height: 99px; /* -10% */
   object-fit: contain;
 }
 
@@ -730,18 +783,18 @@ body.dark #watermark img {
 #filters button {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   text-align: left;
-  font-size: 20px;
+  font-size: 18px; /* -10% */
   font-weight: 300; /* Gilroy Light */
-  padding: 10px 14px;
-  border-radius: 12px;
+  padding: 9px 12px;
+  border-radius: 11px;
   transition: background 0.15s, color 0.15s;
 }
 
 .filter-icon {
-  width: 20px;
-  height: 20px;
+  width: 18px; /* -10% */
+  height: 18px; /* -10% */
   object-fit: contain;
 }
 
@@ -771,15 +824,15 @@ body.dark #filters button.active .filter-icon {
 #files-bar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 10px;
-  font-size: 13px;
+  gap: 10px;
+  margin-bottom: 9px;
+  font-size: 11.5px; /* -10% */
   color: var(--muted);
   font-weight: 300;
 }
 
 .view-toggle-icon {
-  height: 20px;
+  height: 18px; /* -10% */
   object-fit: contain;
   cursor: pointer;
   opacity: 0.85;
@@ -795,15 +848,15 @@ body.dark .view-toggle-icon {
 }
 
 #btn-up {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+  width: 25px; /* -10% */
+  height: 25px; /* -10% */
+  border-radius: 7px;
   border: 1px solid var(--border);
   background: var(--bg);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 12.5px; /* -10% */
   font-weight: 600;
   transition: border-color 0.15s;
 }
@@ -822,18 +875,18 @@ body.dark .view-toggle-icon {
 #file-list {
   flex: 1;
   overflow: auto;
-  columns: 3 240px;
-  column-gap: 16px;
+  columns: 3 220px;
+  column-gap: 14px;
 }
 
 .item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 5px 8px;
-  border-radius: 8px;
+  gap: 9px;
+  padding: 4.5px 7px;
+  border-radius: 7px;
   cursor: pointer;
-  font-size: 17px;
+  font-size: 15px; /* -10% */
   font-weight: 300; /* Gilroy Light */
   break-inside: avoid;
   white-space: nowrap;
@@ -843,8 +896,8 @@ body.dark .view-toggle-icon {
 }
 
 .item-file-icon {
-  width: 18px;
-  height: 18px;
+  width: 16px; /* -10% */
+  height: 16px; /* -10% */
   object-fit: contain;
   flex: none;
 }
@@ -884,24 +937,24 @@ body.dark .item.sel .item-file-icon {
 
 #about .card {
   background: var(--bg);
-  padding: 32px 36px;
-  border-radius: 20px;
+  padding: 28px 32px;
+  border-radius: 18px;
   text-align: center;
-  min-width: 320px;
+  min-width: 300px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
   border: 1px solid var(--border);
 }
 
 #about .card img {
-  height: 32px;
-  margin-bottom: 16px;
+  height: 29px; /* -10% */
+  margin-bottom: 14px;
 }
 
 #about .card p {
-  font-size: 15px;
+  font-size: 13.5px; /* -10% */
   line-height: 1.5;
   color: var(--muted);
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   font-weight: 300;
 }
 
