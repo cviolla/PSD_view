@@ -71,15 +71,16 @@ Referência: [page1.png](page1.png). A janela é dividida em **quatro áreas**, 
 - **Sistema:** atalhos para locais do sistema (Área de Trabalho, Documentos, Imagens, Downloads etc.).
 - **Discos:** unidades de armazenamento disponíveis (C:, D:, E:...).
 - **Favoritos:** pastas fixadas pelo usuário com opção de exclusão.
-- Cada grupo é **expansível** (seta ▾).
+- Cada grupo é **expansível/colapsável** (seta ▾), com **persistência automática de estado** (o app memoriza exatamente quais grupos você deixou abertos ou fechados entre as sessões).
 
 ### 2.3 Painel central superior — Armazenamento
-Card horizontal posicionado no topo, logo acima da janela de preview, exibindo as unidades de disco lado a lado:
+Card horizontal posicionado no topo, logo acima da janela de preview, exibindo as unidades de disco lado a lado em tamanho perfeitamente uniforme e compacto:
 - Letra e rótulo (ex.: `C:`, `D:`, `E:`)
 - **Gráfico circular** com % de uso com a cor de destaque oficial do app (`#e4ff00`)
 - GB usados, GB livres e capacidade total
 - Tipo (Interno) e sistema de arquivos (NTFS)
 - Cabeçalho com total: nº de unidades e espaço livre somado
+- **Dimensões uniformes e proporcionais:** cards com altura fixa de 48px e distribuição equilibrada via grid, eliminando distorções de tamanho e quebras de texto.
 - **Seleção e hover sutis:** efeito translúcido discreto sem contornos fluorescentes excessivos, mantendo elegância visual e foco no conteúdo.
 
 ### 2.4 Painel esquerdo inferior — Filtros rápidos

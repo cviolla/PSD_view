@@ -1,8 +1,12 @@
 # Script oficial de build e assinatura digital do PSD VIEW
 $ErrorActionPreference = "Stop"
 
-Write-Host "==> Compilando PSD VIEW com electron-builder..." -ForegroundColor Cyan
-npx electron-builder --win portable -c.win.sign=null
+# Evita processos travados
+Stop-Process -Name 'PSD VIEW' -Force -ErrorAction SilentlyContinue
+
+Write-Host "==> Compilando PSD VIEW portátil com electron-builder..." -ForegroundColor Cyan
+$env:CSC_IDENTITY_AUTO_DISCOVERY = "false"
+npx electron-builder --win portable
 
 $portableExe = Join-Path $PSScriptRoot "..\dist\PSD-VIEW-0.1.0-portable.exe"
 $unpackedExe = Join-Path $PSScriptRoot "..\dist\win-unpacked\PSD VIEW.exe"

@@ -63,7 +63,28 @@ setTheme(store.get('dark', false));
 
 $('btn-about').onclick = () => $('about').classList.remove('hidden');
 $('about-close').onclick = () => $('about').classList.add('hidden');
-document.querySelectorAll('.group-head').forEach((h) => h.onclick = () => h.parentElement.classList.toggle('collapsed'));
+
+/* ---------- Persistência dos Painéis (Sistema, Discos, Favoritos) ---------- */
+const savedCollapsed = store.get('collapsedGroups', {});
+document.querySelectorAll('.group[data-group]').forEach((groupEl) => {
+  const key = groupEl.dataset.group;
+  if (savedCollapsed[key]) {
+    groupEl.classList.add('collapsed');
+  }
+});
+
+document.querySelectorAll('.group-head').forEach((h) => {
+  h.onclick = () => {
+    const parent = h.parentElement;
+    parent.classList.toggle('collapsed');
+    const key = parent.dataset.group;
+    if (key) {
+      const current = store.get('collapsedGroups', {});
+      current[key] = parent.classList.contains('collapsed');
+      store.set('collapsedGroups', current);
+    }
+  };
+});
 
 /* ---------- Navegação Lateral ---------- */
 function navButton(label, path) {
@@ -105,8 +126,8 @@ async function buildNav() {
       <div class="ring" style="--p:${p}" data-p="${p}%"></div>
       <div class="drive-info">
         <div class="drive-letter">${d.letter}</div>
-        <div>${fmtGB(d.used)} usados · ${fmtGB(d.free)} livres de ${fmtGB(d.total)}</div>
-        <div style="font-size:10px; opacity:0.7">Interno · NTFS</div>
+        <div class="drive-stats">${fmtGB(d.used)} usados · ${fmtGB(d.free)} livres de ${fmtGB(d.total)}</div>
+        <div class="drive-sub">Interno · NTFS</div>
       </div>
     `;
     el.onclick = () => openDir(d.path);
