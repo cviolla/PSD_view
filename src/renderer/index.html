@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -34,7 +34,7 @@
     <aside id="nav" class="panel">
       <div class="search-box">
         <img src="../../icons/Search.png" alt="Buscar" class="search-icon" />
-        <input id="search" type="search" placeholder="Buscar nesta pasta" />
+        <input id="search" type="search" placeholder="Buscar em todo o computador" />
       </div>
 
       <div class="group" data-group="sistema">
@@ -96,6 +96,7 @@
         <button id="btn-rotate" title="Girar 90° (R)">↻</button>
       </div>
       <div id="stage"><div id="placeholder">Selecione um arquivo para pré-visualizar</div></div>
+      <div id="fs-hint">ESC pra sair</div>
       <div id="hint">Roda do mouse / ← →: Navegar • Ctrl + Roda: Zoom • Arraste: Mover • R: Girar • Esc: Fechar</div>
     </section>
 
@@ -115,7 +116,10 @@
         <img src="../../icons/Close-Pane.png" alt="" class="reveal-icon" />
       </button>
       <button id="btn-open-app" class="action">Abrir no programa padrão ↗</button>
-      <button id="btn-fav" class="action">♥ Favoritar pasta atual</button>
+      <button id="btn-fav" class="action-fav">
+        <img src="../../icons/Heart.png" alt="" class="fav-heart" />
+        <span id="btn-fav-label">Favoritar pasta atual</span>
+      </button>
 
       <!-- Marca d'água lateral direita oficial -->
       <div id="watermark">
@@ -176,9 +180,9 @@
 
   <div id="about" class="hidden">
     <div class="card">
-      <img src="../../LOGO.png" alt="PSD VIEW" />
-      <p>PSD VIEW — Versão 0.1.0<br>Explorer offline e rápido com fontes Gilroy e ícones oficiais.</p>
-      <button id="about-close" class="action">Fechar</button>
+      <img src="../../ISO2.png" alt="PSD VIEW" id="about-logo" />
+      <p>PSD VIEW - Versão 0.1.0<br>Explorador de Arquivos by @cviolla</p>
+      <span class="about-esc">ESC pra sair</span>
     </div>
   </div>
 

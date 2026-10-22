@@ -173,10 +173,6 @@ button {
   object-fit: contain;
 }
 
-body.dark #logo {
-  filter: invert(1);
-}
-
 .link {
   color: var(--muted);
   font-size: 15px; /* -10% */
@@ -280,6 +276,27 @@ body.dark .app-icon {
 
 body.dark .search-icon {
   filter: invert(1);
+}
+
+#search::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  margin-left: 6px;
+  cursor: pointer;
+  background-color: var(--muted);
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M2 2l8 8M10 2l-8 8' stroke='black' stroke-width='1.8' stroke-linecap='round'/></svg>") center / contain no-repeat;
+  transition: background-color 0.15s;
+}
+
+#search::-webkit-search-cancel-button:hover {
+  background-color: var(--text);
+}
+
+.link:focus:not(:focus-visible),
+.link:focus {
+  outline: none;
 }
 
 #search {
@@ -835,6 +852,60 @@ body.dark .storage-icon {
   pointer-events: none;
 }
 
+/* ---------- Tela cheia do preview ---------- */
+#fs-hint {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translate(-50%, -8px);
+  z-index: 6;
+  font-size: 12px;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  color: #adb5bd;
+  background: rgba(20, 25, 35, 0.85);
+  backdrop-filter: blur(8px);
+  padding: 6px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+#fs-hint.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+body.fullview #titlebar,
+body.fullview #nav,
+body.fullview #storage,
+body.fullview #props,
+body.fullview #filters,
+body.fullview #files,
+body.fullview #viewer-tools,
+body.fullview #hint {
+  display: none !important;
+}
+
+body.fullview #layout {
+  padding: 0;
+  gap: 0;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+  grid-template-areas: "viewer";
+}
+
+body.fullview #viewer {
+  border-radius: 0;
+  border: 0;
+}
+
+body.fullview #stage {
+  padding: 0;
+}
+
 /* ---------- Painel de Propriedades (Direita) ---------- */
 #props {
   display: flex;
@@ -946,6 +1017,47 @@ body.dark .reveal-icon {
   border-color: var(--text);
 }
 
+.action-fav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 11px;
+  margin-bottom: 7px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.action-fav:hover {
+  border-color: var(--text);
+}
+
+.fav-heart {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+  flex: none;
+  display: block;
+}
+
+body.dark .fav-heart {
+  filter: invert(1);
+}
+
+.item-path {
+  font-style: normal;
+  margin-left: 10px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
 /* Marca d'água lateral oficial (Agrupar 2 copiar.png) */
 #watermark {
   position: absolute;
@@ -957,7 +1069,7 @@ body.dark .reveal-icon {
 }
 
 #watermark img {
-  height: 99px; /* -10% */
+  height: 139px; /* +40% */
   object-fit: contain;
 }
 
@@ -1175,6 +1287,14 @@ body.dark .item-file-icon {
   color: var(--muted);
   margin-bottom: 18px;
   font-weight: 300;
+}
+
+#about .about-esc {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 300;
+  letter-spacing: 0.04em;
 }
 
 .hidden {

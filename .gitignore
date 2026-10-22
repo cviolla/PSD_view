@@ -1,5 +1,6 @@
 page1.psd
 node_modules
-
-
 dist
+build/cert.pfx
+build/cert.password
+*.pfx

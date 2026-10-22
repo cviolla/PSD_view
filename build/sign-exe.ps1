@@ -13,7 +13,11 @@ if (-not (Test-Path $pfxPath)) {
     throw "Certificado PFX não encontrado em: $pfxPath"
 }
 
-$cert = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new($pfxPath, "PsdView2026!")
+# A senha do PFX não fica no código: vem da variável PSDVIEW_PFX_PASSWORD ou do arquivo local build\cert.password (ignorado pelo git)
+$pwdFile = Join-Path $PSScriptRoot "cert.password"
+$pfxPassword = if ($env:PSDVIEW_PFX_PASSWORD) { $env:PSDVIEW_PFX_PASSWORD } elseif (Test-Path $pwdFile) { (Get-Content $pwdFile -Raw).Trim() } else { throw "Senha do certificado não encontrada (defina PSDVIEW_PFX_PASSWORD ou rode create-cert.ps1)." }
+
+$cert = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new($pfxPath, $pfxPassword)
 
 Write-Host "Assinando digitalmente '$FilePath' com o certificado de $($cert.Subject)..." -ForegroundColor Cyan
 $result = Set-AuthenticodeSignature -FilePath $FilePath -Certificate $cert -HashAlgorithm SHA256

@@ -1,7 +1,6 @@
 const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const os = require('os');
 const { execFile } = require('child_process');
 
 // Flags para evitar conflitos de GPU/shader cache e travamentos de permissão no Windows
@@ -35,6 +34,12 @@ function createWindow() {
   });
   win.setMenuBarVisibility(false);
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+  // Segurança: o app é local; bloqueia abertura de novas janelas e navegação para fora da interface
+  win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  win.webContents.on('will-navigate', (e) => e.preventDefault());
+  win.webContents.session.setPermissionRequestHandler((_wc, _perm, cb) => cb(false));
+  win.on('enter-full-screen', () => win.webContents.send('win:fullscreen-changed', true));
+  win.on('leave-full-screen', () => win.webContents.send('win:fullscreen-changed', false));
 }
 
 app.on('second-instance', () => {
@@ -51,6 +56,7 @@ app.on('window-all-closed', () => app.quit());
 ipcMain.on('win:minimize', () => win.minimize());
 ipcMain.on('win:maximize', () => (win.isMaximized() ? win.unmaximize() : win.maximize()));
 ipcMain.on('win:close', () => win.close());
+ipcMain.on('win:fullscreen', (_e, on) => win.setFullScreen(!!on));
 
 // ---- Sistema de arquivos ----
 ipcMain.handle('fs:home', () => ({
@@ -203,4 +209,70 @@ ipcMain.handle('fs:drives', async () => {
       return { ...d, total: 0, free: 0, used: 0 };
     }
   });
+});
+
+// ---- Busca global (home + todos os discos) com resultados em lote ----
+let currentSearchId = 0;
+const SEARCH_SKIP = new Set(['windows', '$recycle.bin', 'system volume information', 'node_modules', '.git', 'appdata', 'programdata', 'program files', 'program files (x86)', '$windows.~bt', 'recovery']);
+const SEARCH_MAX = 1000;
+
+ipcMain.on('search:cancel', () => { currentSearchId++; });
+
+ipcMain.handle('search:start', async (e, query) => {
+  const id = ++currentSearchId;
+  const q = String(query || '').trim().toLowerCase();
+  const sender = e.sender;
+  if (!q) return id;
+  const send = (payload) => { if (!sender.isDestroyed()) sender.send('search:batch', { id, ...payload }); };
+
+  (async () => {
+    const roots = [];
+    for (const k of ['desktop', 'documents', 'pictures', 'downloads', 'videos']) {
+      try { roots.push(app.getPath(k)); } catch {}
+    }
+    roots.push(...(await listDrives()).map((d) => d.path));
+    const visited = new Set();
+    let batch = [];
+    let total = 0;
+    let lastFlush = Date.now();
+    const flush = (force) => {
+      if (batch.length && (force || Date.now() - lastFlush > 120)) {
+        send({ items: batch, done: false });
+        batch = [];
+        lastFlush = Date.now();
+      }
+    };
+
+    for (const root of roots) {
+      const queue = [root];
+      while (queue.length) {
+        if (id !== currentSearchId) return; // cancelada / substituída
+        if (total >= SEARCH_MAX) break;
+        const dir = queue.shift();
+        const key = dir.toLowerCase();
+        if (visited.has(key)) continue;
+        visited.add(key);
+        let entries;
+        try { entries = await fs.promises.readdir(dir, { withFileTypes: true }); } catch { continue; }
+        for (const d of entries) {
+          const full = path.join(dir, d.name);
+          const isDir = d.isDirectory();
+          if (d.name.toLowerCase().includes(q)) {
+            let size = 0, mtime = 0;
+            try { const st = await fs.promises.stat(full); size = st.size; mtime = st.mtimeMs; } catch {}
+            batch.push({ name: d.name, path: full, isDir, size, mtime });
+            total++;
+            if (total >= SEARCH_MAX) break;
+          }
+          if (isDir && !d.isSymbolicLink() && !SEARCH_SKIP.has(d.name.toLowerCase())) queue.push(full);
+        }
+        flush(false);
+      }
+      if (total >= SEARCH_MAX) break;
+    }
+    if (id !== currentSearchId) return;
+    send({ items: batch, done: true, truncated: total >= SEARCH_MAX });
+  })().catch(() => send({ items: [], done: true }));
+
+  return id;
 });

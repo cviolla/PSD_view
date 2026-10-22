@@ -1,7 +1,9 @@
 # Cria e instala certificado autoassinado de Code Signing para assinatura do PSD VIEW
 $ErrorActionPreference = "Stop"
 $certName = "Cristiano Violla"
-$passwordPlainText = "PsdView2026!"
+# Senha aleatória, salva só localmente em build\cert.password (ignorado pelo git)
+$passwordPlainText = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 32 | ForEach-Object { [char]$_ })
+Set-Content -Path (Join-Path $PSScriptRoot "cert.password") -Value $passwordPlainText -NoNewline
 $pwd = ConvertTo-SecureString -String $passwordPlainText -Force -AsPlainText
 
 Write-Host "Gerando certificado de Code Signing para '$certName'..."
@@ -27,8 +29,7 @@ if (Test-Path $pfxPath) { Remove-Item $pfxPath -Force }
 # Exporta arquivo .pfx
 Export-PfxCertificate -Cert $cert -FilePath $pfxPath -Password $pwd | Out-Null
 
-# Importa na autoridade raiz de certificados confiáveis do usuário local
-Import-PfxCertificate -CertStoreLocation "Cert:\CurrentUser\Root" -FilePath $pfxPath -Password $pwd | Out-Null
+# Para confiar no certificado, execute build\install-cert.ps1 como Administrador (não é feito automaticamente).
 
 Write-Host "Certificado gerado com sucesso em: $pfxPath"
 Write-Host "Thumbprint: $($cert.Thumbprint)"

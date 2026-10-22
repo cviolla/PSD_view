@@ -16,5 +16,10 @@ contextBridge.exposeInMainWorld('api', {
   props: (f) => ipcRenderer.invoke('fs:props', f),
   minimize: () => ipcRenderer.send('win:minimize'),
   maximize: () => ipcRenderer.send('win:maximize'),
-  close: () => ipcRenderer.send('win:close')
+  close: () => ipcRenderer.send('win:close'),
+  setFullscreen: (on) => ipcRenderer.send('win:fullscreen', on),
+  onFullscreenChange: (cb) => ipcRenderer.on('win:fullscreen-changed', (_e, on) => cb(on)),
+  searchStart: (q) => ipcRenderer.invoke('search:start', q),
+  searchCancel: () => ipcRenderer.send('search:cancel'),
+  onSearchBatch: (cb) => ipcRenderer.on('search:batch', (_e, data) => cb(data))
 });

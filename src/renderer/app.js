@@ -22,6 +22,8 @@ const kind = (f) => f.isDir ? 'dir' : PSD.includes(ext(f.name)) ? 'psd' : PDF.in
 const fileUrl = (p) => 'file:///' + encodeURI(p.replace(/\\/g, '/')).replace(/#/g, '%23');
 const fmtSize = (b) => b >= 1073741824 ? (b / 1073741824).toFixed(2) + ' GB' : b >= 1048576 ? (b / 1048576).toFixed(2) + ' MB' : (b / 1024).toFixed(2) + ' KB';
 const fmtGB = (b) => (b / 1073741824).toFixed(1) + ' GB';
+// Escapa texto vindo do disco (nomes/caminhos) antes de inserir via innerHTML
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 const store = {
   get: (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
@@ -56,13 +58,21 @@ function setTheme(dark) {
   if (iconImg) {
     iconImg.src = dark ? '../../icons/Moon-and-Stars.png' : '../../icons/Sun.png';
   }
+  const logoSrc = dark ? '../../LOGO2.png' : '../../LOGO.png';
+  const logo = $('logo');
+  if (logo) logo.src = logoSrc;
+  const aboutLogo = $('about-logo');
+  if (aboutLogo) aboutLogo.src = dark ? '../../ISO1.png' : '../../ISO2.png';
   store.set('dark', dark); 
 }
 $('btn-theme').onclick = () => setTheme(!document.body.classList.contains('dark'));
 setTheme(store.get('dark', false));
 
 $('btn-about').onclick = () => $('about').classList.remove('hidden');
-$('about-close').onclick = () => $('about').classList.add('hidden');
+$('about').onclick = (e) => { if (e.target === $('about')) $('about').classList.add('hidden'); };
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !$('about').classList.contains('hidden')) $('about').classList.add('hidden');
+});
 
 /* ---------- Persistência dos Painéis (Sistema, Discos, Favoritos) ---------- */
 const savedCollapsed = store.get('collapsedGroups', {});
@@ -89,7 +99,7 @@ document.querySelectorAll('.group-head').forEach((h) => {
 /* ---------- Navegação Lateral ---------- */
 function navButton(label, path) {
   const b = document.createElement('button');
-  b.innerHTML = `<img src="../../icons/Opened-Folder.png" class="sub-folder-icon" alt="" /><span>${label}</span>`; 
+  b.innerHTML = `<img src="../../icons/Opened-Folder.png" class="sub-folder-icon" alt="" /><span>${esc(label)}</span>`; 
   b.title = path; 
   b.onclick = () => openDir(path);
   return b;
@@ -164,7 +174,7 @@ function renderFavs() {
     item.innerHTML = `
       <button class="fav-link">
         <img src="../../icons/Opened-Folder.png" class="sub-folder-icon" alt="" />
-        <span class="fav-label">${label}</span>
+        <span class="fav-label">${esc(label)}</span>
       </button>
       <button class="fav-del-btn" title="Remover dos favoritos">✕</button>
     `;
@@ -185,12 +195,12 @@ function updateFavBtn() {
   const btn = $('btn-fav');
   if (!btn) return;
   if (state.dir && state.favs.includes(state.dir)) {
-    btn.textContent = '♥ Pasta favoritada (remover)';
+    $('btn-fav-label').textContent = 'Pasta favoritada (remover)';
     btn.style.color = 'var(--text)';
     btn.style.borderColor = 'var(--accent)';
     btn.style.boxShadow = '0 0 10px rgba(228, 255, 0, 0.3)';
   } else {
-    btn.textContent = '♥ Favoritar pasta atual';
+    $('btn-fav-label').textContent = 'Favoritar pasta atual';
     btn.style.color = 'var(--text)';
     btn.style.borderColor = '';
     btn.style.boxShadow = '';
@@ -255,6 +265,7 @@ function updateActiveDrive() {
 async function openDir(dir) {
   try {
     const items = await api.readdir(dir);
+    stopGlobalSearch(true);
     state.dir = dir;
     state.items = items.map((i) => ({ ...i, kind: kind(i) }))
       .sort((a, b) => (b.isDir - a.isDir) || a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
@@ -269,25 +280,27 @@ async function openDir(dir) {
 
 function renderList() {
   const q = state.query.toLowerCase();
-  const list = state.items.filter((i) => {
-    if (q && !i.name.toLowerCase().includes(q)) return false;
+  const source = state.globalActive ? state.globalItems : state.items;
+  const list = source.filter((i) => {
+    if (!state.globalActive && q && !i.name.toLowerCase().includes(q)) return false;
     if (state.filter === 'all') return true;
     return i.isDir || i.kind === state.filter;
   });
   state.viewables = list.filter((i) => ['image', 'psd', 'video', 'pdf'].includes(i.kind));
-  $('count').textContent = list.length + ' itens';
+  $('count').textContent = list.length + ' itens' + (state.globalActive ? (state.globalDone ? ' (busca global)' : ' — buscando…') : '');
   const frag = document.createDocumentFragment();
   
   const LIMIT = 3000;
   list.slice(0, LIMIT).forEach((i) => {
     const el = document.createElement('div');
     el.className = 'item' + (state.selected?.path === i.path ? ' sel' : '');
-    el.title = i.name; 
+    el.title = state.globalActive ? i.path : i.name; 
     el.dataset.path = i.path;
     
     // Ícone oficial baseado no tipo de arquivo
     const iconSrc = iconPaths[i.kind] || iconPaths.other;
-    el.innerHTML = `<img src="${iconSrc}" class="item-file-icon" alt="" /><span>${i.name}</span>`;
+    const sub = state.globalActive ? `<em class="item-path">${esc(i.path.slice(0, Math.max(0, i.path.length - i.name.length - 1)))}</em>` : '';
+    el.innerHTML = `<img src="${iconSrc}" class="item-file-icon" alt="" /><span>${esc(i.name)}${sub}</span>`;
     
     el.onclick = () => select(i, el);
     el.ondblclick = () => (i.isDir ? openDir(i.path) : select(i, el));
@@ -310,9 +323,48 @@ $('btn-up').onclick = () => {
   openDir(/^[A-Za-z]:$/.test(up) ? up + '\\' : up || state.dir);
 };
 
+/* ---------- Busca global (todos os discos) ---------- */
+let searchTimer = null;
+
+function stopGlobalSearch(clearInput) {
+  clearTimeout(searchTimer);
+  if (state.globalActive) api.searchCancel();
+  state.globalActive = false;
+  state.globalItems = [];
+  state.globalDone = true;
+  if (clearInput) {
+    state.query = '';
+    $('search').value = '';
+  }
+}
+
+api.onSearchBatch((d) => {
+  if (!state.globalActive || (state.searchId && d.id < state.searchId)) return;
+  state.globalItems.push(...d.items.map((i) => ({ ...i, kind: kind(i) })));
+  if (d.done) state.globalDone = true;
+  renderList();
+  if (d.done) $('crumb').textContent = 'Resultados para "' + state.query + '" em todo o computador' + (d.truncated ? ' (primeiros 1000)' : '');
+});
+
 $('search').oninput = (e) => { 
   state.query = e.target.value; 
-  renderList(); 
+  clearTimeout(searchTimer);
+  const q = state.query.trim();
+  if (q.length < 2) {
+    const wasGlobal = state.globalActive;
+    stopGlobalSearch(false);
+    if (wasGlobal && state.dir) $('crumb').textContent = state.dir;
+    renderList();
+    return;
+  }
+  searchTimer = setTimeout(async () => {
+    state.globalActive = true;
+    state.globalItems = [];
+    state.globalDone = false;
+    $('crumb').textContent = 'Buscando "' + q + '" em todo o computador…';
+    renderList();
+    state.searchId = await api.searchStart(q);
+  }, 300);
 };
 
 document.querySelectorAll('#filters button').forEach((b) => b.onclick = () => {
@@ -458,7 +510,7 @@ function showGenericPreview(item) {
     stage.innerHTML = `
       <div class="file-card-preview">
         <img src="${iconSrc}" class="icon-img" alt="" />
-        <div class="title">${item.name}</div>
+        <div class="title">${esc(item.name)}</div>
         <div class="meta">Pasta de arquivos</div>
         <button class="card-btn" id="card-open-btn">Abrir pasta ↵</button>
       </div>`;
@@ -468,7 +520,7 @@ function showGenericPreview(item) {
     stage.innerHTML = `
       <div class="file-card-preview">
         <img src="${iconSrc}" class="icon-img" alt="" />
-        <div class="title">${item.name}</div>
+        <div class="title">${esc(item.name)}</div>
         <div class="meta">${e} • ${fmtSize(item.size)}</div>
         <button class="card-btn" id="card-open-btn">Abrir no programa padrão ↗</button>
       </div>`;
@@ -605,7 +657,7 @@ async function preview(item) {
     }
   } catch (e) {
     if (token !== state.token) return;
-    stage.innerHTML = `<div id="placeholder">Não foi possível abrir este arquivo.<br><small>${String(e.message || e)}</small></div>`;
+    stage.innerHTML = `<div id="placeholder">Não foi possível abrir este arquivo.<br><small>${esc(e.message || e)}</small></div>`;
     return;
   }
   
@@ -681,11 +733,54 @@ window.addEventListener('mouseup', () => {
 
 stage.addEventListener('dblclick', (e) => {
   if (e.target.tagName === 'BUTTON' || e.target.closest('#viewer-tools')) return;
+  if (state.fullview) { setFullView(false); return; }
   fitToScreen();
+});
+
+/* ---------- Tela cheia do preview ---------- */
+let fsHintTimer = null;
+
+function setFullView(on) {
+  if (on === !!state.fullview) return;
+  state.fullview = on;
+  document.body.classList.toggle('fullview', on);
+  api.setFullscreen(on);
+  hideContextMenu();
+  clearTimeout(fsHintTimer);
+  $('fs-hint').classList.toggle('show', on);
+  if (on) fsHintTimer = setTimeout(() => $('fs-hint').classList.remove('show'), 3500);
+  // Reajusta ao novo tamanho do palco mantendo a rotação escolhida
+  setTimeout(() => {
+    const rot = state.nav.rot;
+    fitToScreen();
+    state.nav.rot = rot;
+    applyTransform();
+  }, 150);
+}
+
+api.onFullscreenChange((on) => {
+  // Sincroniza caso o Windows saia da tela cheia por outro meio
+  if (!on && state.fullview) {
+    state.fullview = false;
+    document.body.classList.remove('fullview');
+    $('fs-hint').classList.remove('show');
+  }
+});
+
+stage.addEventListener('contextmenu', (e) => {
+  if (e.target.closest('#viewer-tools')) return;
+  if (!state.fullview && !stage.querySelector('.preview-media')) return;
+  e.preventDefault();
+  showContextMenu(e.clientX, e.clientY, null, [
+    state.fullview
+      ? { label: 'Sair da tela cheia', hint: 'Esc', run: () => setFullView(false) }
+      : { label: 'Ver em tela cheia', run: () => setFullView(true) }
+  ]);
 });
 
 window.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'Escape' && state.fullview) { setFullView(false); return; }
   if (e.key === 'ArrowRight') step(1);
   else if (e.key === 'ArrowLeft') step(-1);
   else if (e.key === 'PageDown' || (state.selected?.kind === 'pdf' && e.key === 'ArrowDown')) {
@@ -774,8 +869,8 @@ function hideContextMenu() {
   ctxMenu.innerHTML = '';
 }
 
-function showContextMenu(x, y, item) {
-  const entries = item
+function showContextMenu(x, y, item, custom) {
+  const entries = custom ? custom : item
     ? [
         { label: 'Abrir', hint: 'Enter', run: () => (item.isDir ? openDir(item.path) : api.open(item.path)) },
         { label: 'Abrir com...', disabled: item.isDir, run: () => api.openWith(item.path) },
