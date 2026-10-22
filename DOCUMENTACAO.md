@@ -42,15 +42,14 @@ Referência: [page1.png](page1.png). A janela é dividida em **quatro áreas**, 
 ┌───────────────────────────────────────────────────────────────────┐
 │ LOGO  PSD VIEW   Sobre                         ☀  —  ⤢  ✕         │
 ├────────────┬──────────────────────────────────┬───────────────────┤
-│ 🔍 Busca   │                                  │  Propriedades     │
-│ Sistema ▾  │     Área de Visualização         │  Tipo             │
-│ Discos  ▾  │     (preview grande)             │  Tamanho          │
-│ Favoritos▾ │                                  │  Caminho          │
-│            │                                  │  Última modif.    │
-│ Armazena-  │                                  │  Classificação ★  │
-│ mento      │                                  │  Mostrar no       │
-├────────────┼──────────────────────────────────┤  explorer         │
-│ Todos      │   Lista de arquivos e pastas     │                   │
+│ 🔍 Busca   │  Armazenamento (C:, D:, E: lado) │  Propriedades     │
+│ Sistema ▾  ├──────────────────────────────────┤  Tipo             │
+│ Discos  ▾  │                                  │  Tamanho          │
+│ Favoritos▾ │     Área de Visualização         │  Caminho          │
+│            │     (preview grande)             │  Última modif.    │
+│            │                                  │  Classificação ★  │
+├────────────┼──────────────────────────────────┤  Mostrar no       │
+│ Todos      │   Lista de arquivos e pastas     │  explorer         │
 │ Imagens    │   (em colunas)                   │                   │
 │ PSD        │                                  │                   │
 │ Vídeos     │                                  │                   │
@@ -67,23 +66,23 @@ Referência: [page1.png](page1.png). A janela é dividida em **quatro áreas**, 
 | ⤢ | Maximizar / restaurar |
 | ✕ | Fechar |
 
-### 2.2 Painel esquerdo superior — Navegação
+### 2.2 Painel esquerdo — Navegação
 - **Campo de busca:** pesquisa por nome de arquivo/pasta.
 - **Sistema:** atalhos para locais do sistema (Área de Trabalho, Documentos, Imagens, Downloads etc.).
 - **Discos:** unidades de armazenamento disponíveis (C:, D:, E:...).
-- **Favoritos:** pastas fixadas pelo usuário.
+- **Favoritos:** pastas fixadas pelo usuário com opção de exclusão.
 - Cada grupo é **expansível** (seta ▾).
 
-### 2.3 Painel esquerdo — Armazenamento
-Resumo das unidades, exibindo para cada disco:
-- Letra e rótulo (ex.: `C:`, `E: D2`, `D: D1`)
-- **Gráfico circular** com % de uso
+### 2.3 Painel central superior — Armazenamento
+Card horizontal posicionado no topo, logo acima da janela de preview, exibindo as unidades de disco lado a lado:
+- Letra e rótulo (ex.: `C:`, `D:`, `E:`)
+- **Gráfico circular** com % de uso com a cor de destaque oficial do app (`#e4ff00`)
 - GB usados, GB livres e capacidade total
-- Tipo (Interno), sistema de arquivos (NTFS) e modelo do dispositivo
+- Tipo (Interno) e sistema de arquivos (NTFS)
 - Cabeçalho com total: nº de unidades e espaço livre somado
 
 ### 2.4 Painel esquerdo inferior — Filtros rápidos
-**Todos · Imagens · PSD · Vídeos** — filtram a lista de arquivos pelo tipo.
+**Todos · Imagens · PSD · Vídeos** — filtram a lista de arquivos pelo tipo, com indicador na cor `#e4ff00`.
 
 ### 2.5 Área de visualização (central superior)
 - Preview grande do arquivo selecionado, sobre fundo escuro.

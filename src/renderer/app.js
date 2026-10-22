@@ -156,11 +156,15 @@ function updateFavBtn() {
   const btn = $('btn-fav');
   if (!btn) return;
   if (state.dir && state.favs.includes(state.dir)) {
-    btn.textContent = '♥ Remover dos favoritos';
-    btn.style.color = '#e5484d';
+    btn.textContent = '♥ Pasta favoritada (remover)';
+    btn.style.color = 'var(--text)';
+    btn.style.borderColor = 'var(--accent)';
+    btn.style.boxShadow = '0 0 10px rgba(228, 255, 0, 0.3)';
   } else {
     btn.textContent = '♥ Favoritar pasta atual';
     btn.style.color = 'var(--text)';
+    btn.style.borderColor = '';
+    btn.style.boxShadow = '';
   }
 }
 
