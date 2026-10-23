@@ -25,7 +25,21 @@ $pfxPassword = if ($env:PSDVIEW_PFX_PASSWORD) { $env:PSDVIEW_PFX_PASSWORD } else
 $cert = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new($pfxPath, $pfxPassword)
 
 Write-Host "Assinando digitalmente '$FilePath' com o certificado de $($cert.Subject)..." -ForegroundColor Cyan
-$result = Set-AuthenticodeSignature -FilePath $FilePath -Certificate $cert -HashAlgorithm SHA256
+$maxAttempts = 5
+$signed = $false
+for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+    try {
+        $result = Set-AuthenticodeSignature -FilePath $FilePath -Certificate $cert -HashAlgorithm SHA256
+        $signed = $true
+        break
+    } catch {
+        if ($attempt -lt $maxAttempts) {
+            Start-Sleep -Seconds 1
+        } else {
+            throw $_
+        }
+    }
+}
 
 Write-Host "Resultado da assinatura:" -ForegroundColor Green
 $sig = Get-AuthenticodeSignature -FilePath $FilePath

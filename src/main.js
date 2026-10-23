@@ -40,6 +40,8 @@ function createWindow() {
   win.webContents.session.setPermissionRequestHandler((_wc, _perm, cb) => cb(false));
   win.on('enter-full-screen', () => win.webContents.send('win:fullscreen-changed', true));
   win.on('leave-full-screen', () => win.webContents.send('win:fullscreen-changed', false));
+  win.on('maximize', () => win.webContents.send('win:maximized-changed', true));
+  win.on('unmaximize', () => win.webContents.send('win:maximized-changed', false));
 }
 
 app.on('second-instance', () => {
@@ -55,6 +57,7 @@ app.on('window-all-closed', () => app.quit());
 // ---- Controles da janela ----
 ipcMain.on('win:minimize', () => win.minimize());
 ipcMain.on('win:maximize', () => (win.isMaximized() ? win.unmaximize() : win.maximize()));
+ipcMain.handle('win:is-maximized', () => (win ? win.isMaximized() : false));
 ipcMain.on('win:close', () => win.close());
 ipcMain.on('win:fullscreen', (_e, on) => win.setFullScreen(!!on));
 

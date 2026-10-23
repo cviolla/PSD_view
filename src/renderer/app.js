@@ -53,6 +53,26 @@ $('btn-min').onclick = () => api.minimize();
 $('btn-max').onclick = () => api.maximize();
 $('btn-close').onclick = () => api.close();
 
+function updateMaxBtn(isMax) {
+  const btn = $('btn-max');
+  const img = $('icon-max');
+  if (!btn || !img) return;
+  if (isMax) {
+    img.src = '../../icons/minimize 2.png';
+    btn.title = 'Restaurar tamanho';
+  } else {
+    img.src = '../../icons/Decompress.png';
+    btn.title = 'Maximizar';
+  }
+}
+
+if (api.onMaximizedChange) {
+  api.onMaximizedChange((isMax) => updateMaxBtn(isMax));
+}
+if (api.isMaximized) {
+  api.isMaximized().then(updateMaxBtn).catch(() => {});
+}
+
 function setTheme(dark) { 
   document.body.classList.toggle('dark', dark); 
   const iconImg = $('icon-theme');

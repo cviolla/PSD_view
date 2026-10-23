@@ -29,9 +29,11 @@ Todas as modificações notáveis neste projeto serão documentadas neste arquiv
 
 ---
 
-### 🪟 Novo Ícone Oficial de Minimizar Janela
-- Substituição do antigo ícone circular estilo macOS (`MacOS-Minimize.png`), que causava forte ruído visual e parecia uma placa de proibição ao ser invertido no tema escuro.
-- Implementação do ícone de setas convergentes (`icons/Minimize.png` / `icons/minimize 2.png`), perfeitamente simétrico e complementar ao ícone de maximizar (`Decompress.png`), mantendo total coerência estética na barra de título.
+### 🪟 Controles da Janela Unificados e Harmonizados
+- **Retorno do botão clássico de minimizar**: restaurado o ícone oficial circular com sinal negativo (`MacOS-Minimize.png`).
+- **Botão Maximizar / Restaurar unificado e dinâmico**: o botão `btn-max` agora detecta automaticamente se a janela está maximizada ou em tamanho normal (inclusive via Windows Snap ou clique duplo na barra), alternando dinamicamente:
+  - Janela normal: exibe `Decompress.png` (setas divergentes ↗↙) e tooltip *"Maximizar"*.
+  - Janela maximizada: exibe `minimize 2.png` (setas convergentes ↘↖) e tooltip *"Restaurar tamanho"*.
 
 ---
 

@@ -16,6 +16,8 @@ contextBridge.exposeInMainWorld('api', {
   props: (f) => ipcRenderer.invoke('fs:props', f),
   minimize: () => ipcRenderer.send('win:minimize'),
   maximize: () => ipcRenderer.send('win:maximize'),
+  isMaximized: () => ipcRenderer.invoke('win:is-maximized'),
+  onMaximizedChange: (cb) => ipcRenderer.on('win:maximized-changed', (_e, on) => cb(on)),
   close: () => ipcRenderer.send('win:close'),
   setFullscreen: (on) => ipcRenderer.send('win:fullscreen', on),
   onFullscreenChange: (cb) => ipcRenderer.on('win:fullscreen-changed', (_e, on) => cb(on)),
