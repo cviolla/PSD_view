@@ -1,6 +1,6 @@
 {
   "name": "psd-view",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "PSD VIEW - explorer offline e rápido para PSD, imagens, PDFs e vídeos",
   "main": "src/main.js",
   "scripts": {

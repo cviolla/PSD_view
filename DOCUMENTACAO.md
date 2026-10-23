@@ -104,6 +104,7 @@ Card horizontal posicionado no topo, logo acima da janela de preview, exibindo a
 | **Última modificação** | Data de modificação |
 | **Classificação** | Nota de 1 a 5 estrelas, definida pelo usuário |
 | **Mostrar no explorer** | Abre o local do arquivo no gerenciador do sistema |
+| **Acesso Rápido (Fixados)** | Card para fixar até 3 arquivos frequentemente usados com acesso direto |
 
 ---
 
@@ -114,6 +115,7 @@ Card horizontal posicionado no topo, logo acima da janela de preview, exibindo a
 - Filtrar por categoria (Todos, Imagens, PSD, Vídeos).
 - Busca por nome.
 - Favoritar pastas.
+- **Acesso Rápido:** pinar/fixar até 3 arquivos usados com frequência no card lateral, com navegação imediata ao clicar e abertura no aplicativo padrão com duplo clique.
 
 ### 3.2 Visualização
 - **PSD:** exibe a imagem composta, sem abrir o Photoshop.
@@ -126,7 +128,8 @@ Card horizontal posicionado no topo, logo acima da janela de preview, exibindo a
 ### 3.3 Propriedades e organização
 - Metadados do arquivo.
 - Classificação por estrelas.
-- Atalho para "Mostrar no explorer".
+- Atalho para "Mostrar no explorer" e "Abrir no programa padrão".
+- Botão "Fixar no Acesso Rápido" e menu de contexto correspondente.
 
 ### 3.4 Personalização
 - Tema claro e escuro.

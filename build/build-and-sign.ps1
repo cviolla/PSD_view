@@ -8,7 +8,8 @@ Write-Host "==> Compilando PSD VIEW portátil com electron-builder..." -Foregrou
 $env:CSC_IDENTITY_AUTO_DISCOVERY = "false"
 npx electron-builder --win portable
 
-$portableExe = Join-Path $PSScriptRoot "..\dist\PSD-VIEW-0.1.0-portable.exe"
+$pkg = Get-Content (Join-Path $PSScriptRoot "..\package.json") -Raw | ConvertFrom-Json
+$portableExe = Join-Path $PSScriptRoot "..\dist\PSD-VIEW-$($pkg.version)-portable.exe"
 $unpackedExe = Join-Path $PSScriptRoot "..\dist\win-unpacked\PSD VIEW.exe"
 
 $signScript = Join-Path $PSScriptRoot "sign-exe.ps1"

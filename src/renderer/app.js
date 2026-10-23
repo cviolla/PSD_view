@@ -39,6 +39,7 @@ const state = {
   viewables: [], 
   rating: store.get('ratings', {}), 
   favs: store.get('favs', []), 
+  pinned: store.get('pinned', []), 
   nav: { rot: 0, zoom: 1, x: 0, y: 0 }, 
   token: 0,
   viewMode: store.get('viewMode', 'columns'),
@@ -219,6 +220,145 @@ $('btn-fav').onclick = () => {
   updateFavBtn();
 };
 
+/* ---------- Acesso Rápido (Fixar até 3 Arquivos Frequentes) ---------- */
+const MAX_PINNED = 3;
+
+function isPinned(path) {
+  return state.pinned.some((p) => p.path === path);
+}
+
+function updatePinBtn() {
+  const btn = $('btn-pin');
+  if (!btn) return;
+  const sel = state.selected;
+  // Botão só fica visível quando um arquivo está selecionado (pastas usam Favoritos)
+  if (!sel || sel.isDir) {
+    btn.style.display = 'none';
+    return;
+  }
+  btn.style.display = 'flex';
+  if (isPinned(sel.path)) {
+    $('btn-pin-label').textContent = 'Arquivo fixado (remover)';
+    btn.style.color = 'var(--text)';
+    btn.style.borderColor = 'var(--accent)';
+    btn.style.boxShadow = '0 0 10px rgba(228, 255, 0, 0.3)';
+  } else {
+    $('btn-pin-label').textContent = 'Fixar no Acesso Rápido';
+    btn.style.color = 'var(--text)';
+    btn.style.borderColor = '';
+    btn.style.boxShadow = '';
+  }
+}
+
+async function togglePin(item) {
+  if (!item || item.isDir) return;
+  if (isPinned(item.path)) {
+    state.pinned = state.pinned.filter((p) => p.path !== item.path);
+  } else {
+    if (state.pinned.length >= MAX_PINNED) {
+      await showError(`Limite de ${MAX_PINNED} arquivos fixados atingido. Desfixe um arquivo antes de adicionar outro.`);
+      return;
+    }
+    state.pinned.push({
+      path: item.path,
+      name: item.name,
+      kind: item.kind || kind(item),
+      size: item.size || 0,
+      mtime: item.mtime || Date.now()
+    });
+  }
+  store.set('pinned', state.pinned);
+  renderQuickAccess();
+  updatePinBtn();
+}
+
+const btnPin = $('btn-pin');
+if (btnPin) {
+  btnPin.onclick = () => {
+    if (state.selected && !state.selected.isDir) {
+      togglePin(state.selected);
+    }
+  };
+}
+
+function updateQuickAccessActive() {
+  const curPath = state.selected?.path;
+  document.querySelectorAll('.qa-item').forEach((el) => {
+    el.classList.toggle('active', el.dataset.path === curPath);
+  });
+}
+
+function renderQuickAccess() {
+  const list = $('qa-list');
+  const badge = $('qa-badge');
+  if (!list) return;
+  if (badge) badge.textContent = `${state.pinned.length}/${MAX_PINNED}`;
+  list.innerHTML = '';
+
+  if (!state.pinned.length) {
+    const empty = document.createElement('div');
+    empty.className = 'qa-empty';
+    empty.innerHTML = 'Nenhum arquivo fixado<br><span style="opacity:0.75; font-size:10.5px;">Fixe até 3 arquivos favoritos</span>';
+    list.appendChild(empty);
+    updateQuickAccessActive();
+    return;
+  }
+
+  state.pinned.forEach((file) => {
+    const itemEl = document.createElement('div');
+    itemEl.className = 'qa-item' + (state.selected?.path === file.path ? ' active' : '');
+    itemEl.dataset.path = file.path;
+    itemEl.title = `${file.name}\n${file.path}\nClique: Selecionar e visualizar\nDuplo clique: Abrir no programa padrão`;
+
+    const iconSrc = iconPaths[file.kind] || iconPaths.other;
+    const parentDir = file.path.replace(/[\\/][^\\/]*$/, '');
+    const folderDisplay = getFolderDisplayName(parentDir);
+
+    itemEl.innerHTML = `
+      <img src="${iconSrc}" class="qa-item-icon" alt="" />
+      <div class="qa-item-info">
+        <span class="qa-item-name">${esc(file.name)}</span>
+        <span class="qa-item-sub">${esc(folderDisplay)}</span>
+      </div>
+      <button class="qa-item-del" title="Desfixar do Acesso Rápido" aria-label="Desfixar">✕</button>
+    `;
+
+    // Clique simples: abre a pasta de origem, seleciona o arquivo e faz o preview
+    itemEl.onclick = async () => {
+      try {
+        if (state.dir !== parentDir) {
+          await openDir(parentDir);
+        }
+        const target = state.items.find((i) => i.path === file.path) || file;
+        const domEl = document.querySelector(`.item[data-path="${CSS.escape(file.path)}"]`);
+        select(target, domEl);
+        if (domEl) domEl.scrollIntoView({ block: 'nearest' });
+      } catch (err) {
+        showError('Não foi possível acessar o arquivo fixado: ' + (err.message || err));
+      }
+    };
+
+    // Duplo clique: abre diretamente no programa padrão
+    itemEl.ondblclick = (e) => {
+      e.stopPropagation();
+      api.open(file.path);
+    };
+
+    // Botão de desfixar (✕)
+    itemEl.querySelector('.qa-item-del').onclick = (e) => {
+      e.stopPropagation();
+      state.pinned = state.pinned.filter((p) => p.path !== file.path);
+      store.set('pinned', state.pinned);
+      renderQuickAccess();
+      updatePinBtn();
+    };
+
+    list.appendChild(itemEl);
+  });
+
+  updateQuickAccessActive();
+}
+
 /* ---------- Alternância de Visualização da Lista (Colunas / Lista) ---------- */
 function applyViewMode(mode) {
   state.viewMode = mode;
@@ -380,6 +520,8 @@ function select(item, el) {
   document.querySelectorAll('.item.sel').forEach((x) => x.classList.remove('sel'));
   el?.classList.add('sel');
   showProps(item);
+  updatePinBtn();
+  updateQuickAccessActive();
   if (['image', 'psd', 'video', 'pdf'].includes(item.kind)) {
     preview(item);
   } else {
@@ -874,6 +1016,9 @@ function showContextMenu(x, y, item, custom) {
     ? [
         { label: 'Abrir', hint: 'Enter', run: () => (item.isDir ? openDir(item.path) : api.open(item.path)) },
         { label: 'Abrir com...', disabled: item.isDir, run: () => api.openWith(item.path) },
+        ...(!item.isDir ? [
+          { label: isPinned(item.path) ? 'Desfixar do Acesso Rápido' : 'Fixar no Acesso Rápido', run: () => togglePin(item) }
+        ] : []),
         { sep: true },
         { label: 'Copiar', hint: 'Ctrl+C', run: () => copyItem(item) },
         { label: 'Colar', hint: 'Ctrl+V', run: () => pasteHere(item.isDir ? item.path : state.dir) },
@@ -932,6 +1077,12 @@ async function renameItem(item) {
   if (!name || name === item.name) return;
   try {
     const dest = await api.rename(item.path, name);
+    if (isPinned(item.path)) {
+      state.pinned = state.pinned.map((p) => p.path === item.path ? { ...p, path: dest, name: name } : p);
+      store.set('pinned', state.pinned);
+      renderQuickAccess();
+      updatePinBtn();
+    }
     if (state.selected?.path === item.path) state.selected = null;
     await openDir(state.dir);
     const el = document.querySelector(`.item[data-path="${CSS.escape(dest)}"]`);
@@ -952,6 +1103,12 @@ async function deleteItem(item) {
   if (!ok) return;
   try {
     await api.remove(item.path);
+    if (isPinned(item.path)) {
+      state.pinned = state.pinned.filter((p) => p.path !== item.path);
+      store.set('pinned', state.pinned);
+      renderQuickAccess();
+      updatePinBtn();
+    }
     if (state.selected?.path === item.path) {
       state.selected = null;
       state.token++;
@@ -1016,6 +1173,8 @@ window.addEventListener('keydown', (e) => {
 /* ---------- Início ---------- */
 (async () => {
   applyViewMode(state.viewMode);
+  renderQuickAccess();
+  updatePinBtn();
   await buildNav();
   // Abre a pasta inicial atual do projeto
   openDir('c:\\Users\\cviol\\PSD_view');

@@ -1,8 +1,13 @@
 param(
-    [string]$FilePath = "dist\PSD-VIEW-0.1.0-portable.exe"
+    [string]$FilePath
 )
 
 $ErrorActionPreference = "Stop"
+
+if (-not $FilePath) {
+    $pkg = Get-Content (Join-Path $PSScriptRoot "..\package.json") -Raw | ConvertFrom-Json
+    $FilePath = "dist\PSD-VIEW-$($pkg.version)-portable.exe"
+}
 
 if (-not (Test-Path $FilePath)) {
     throw "Arquivo não encontrado: $FilePath"

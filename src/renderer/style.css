@@ -1051,6 +1051,206 @@ body.dark .fav-heart {
   filter: invert(1);
 }
 
+.action-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 11px;
+  margin-bottom: 7px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.action-pin:hover {
+  border-color: var(--text);
+}
+
+.pin-icon {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+  flex: none;
+  display: block;
+}
+
+body.dark .pin-icon {
+  filter: invert(1);
+}
+
+/* ---------- Card de Acesso Rápido (Painel Direito) ---------- */
+.quick-access-card {
+  position: relative;
+  z-index: 1;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  margin-top: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.15s;
+}
+
+body.dark .quick-access-card {
+  background: rgba(36, 39, 46, 0.85);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.qa-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 9px;
+}
+
+.qa-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.qa-header-icon {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  opacity: 0.85;
+}
+
+body.dark .qa-header-icon {
+  filter: invert(1);
+}
+
+.qa-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  color: var(--text);
+}
+
+.qa-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--hover);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.qa-empty {
+  padding: 14px 10px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 300;
+  line-height: 1.45;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  margin-top: 2px;
+}
+
+.qa-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.qa-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 9px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: var(--bg);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  position: relative;
+}
+
+.qa-item:hover {
+  background: var(--panel);
+  border-color: var(--border);
+  transform: translateX(2px);
+}
+
+.qa-item.active {
+  border-color: var(--accent);
+  background: var(--sel-bg);
+}
+
+.qa-item-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  flex: none;
+}
+
+body.dark .qa-item-icon {
+  filter: invert(1);
+}
+
+body.dark .qa-item-icon[src*="Adobe-Photoshop"] {
+  filter: none;
+}
+
+.qa-item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.qa-item-name {
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text);
+}
+
+.qa-item-sub {
+  font-size: 10px;
+  font-weight: 300;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.qa-item-del {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--muted);
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s, color 0.15s;
+  flex: none;
+}
+
+.qa-item:hover .qa-item-del {
+  opacity: 1;
+}
+
+.qa-item-del:hover {
+  background: rgba(255, 60, 60, 0.15);
+  color: #ff4d4d;
+}
+
 .item-path {
   font-style: normal;
   margin-left: 10px;
@@ -1066,6 +1266,7 @@ body.dark .fav-heart {
   opacity: 0.35;
   pointer-events: none;
   user-select: none;
+  z-index: 0;
 }
 
 #watermark img {

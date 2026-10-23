@@ -19,7 +19,7 @@
         <img id="icon-theme" src="../../icons/Sun.png" alt="Tema" class="app-icon" />
       </button>
       <button id="btn-min" title="Minimizar">
-        <img src="../../icons/MacOS-Minimize.png" alt="Minimizar" class="app-icon" />
+        <img src="../../icons/Minimize.png" alt="Minimizar" class="app-icon" />
       </button>
       <button id="btn-max" title="Maximizar">
         <img src="../../icons/Decompress.png" alt="Maximizar" class="app-icon" />
@@ -120,6 +120,22 @@
         <img src="../../icons/Heart.png" alt="" class="fav-heart" />
         <span id="btn-fav-label">Favoritar pasta atual</span>
       </button>
+      <button id="btn-pin" class="action-pin">
+        <img src="../../icons/Pin.png" alt="" class="pin-icon" />
+        <span id="btn-pin-label">Fixar no Acesso Rápido</span>
+      </button>
+
+      <!-- Card de Acesso Rápido para arquivos frequentemente usados -->
+      <section id="quick-access-card" class="quick-access-card">
+        <div class="qa-header">
+          <div class="qa-title-wrap">
+            <img src="../../icons/Pin.png" alt="" class="qa-header-icon" />
+            <span class="qa-title">Acesso Rápido</span>
+          </div>
+          <span id="qa-badge" class="qa-badge">0/3</span>
+        </div>
+        <div id="qa-list" class="qa-list"></div>
+      </section>
 
       <!-- Marca d'água lateral direita oficial -->
       <div id="watermark">
@@ -181,7 +197,7 @@
   <div id="about" class="hidden">
     <div class="card">
       <img src="../../ISO2.png" alt="PSD VIEW" id="about-logo" />
-      <p>PSD VIEW - Versão 0.1.0<br>Explorador de Arquivos by @cviolla</p>
+      <p>PSD VIEW - Versão 0.1.1<br>Explorador de Arquivos by @cviolla</p>
       <span class="about-esc">ESC pra sair</span>
     </div>
   </div>
