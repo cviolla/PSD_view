@@ -21,31 +21,21 @@ async function main() {
 
   const bodyText = `## 🚀 O que há de novo na versão ${version}
 
-### 🔍 Busca com Escopo Dinâmico (Pasta Atual vs. Todo o PC)
-- **Seletor de Escopo em Pílula (\`[Pasta] [PC]\`)**: integrado na barra de busca lateral.
-- **Busca na Pasta Atual**: varre recursivamente a pasta aberta e todas as suas subpastas.
-- **Busca em Todo o PC**: busca global em todos os discos e pastas do sistema.
+### 📑 Inspetor e Árvore de Camadas Interativa (PSD / PSB)
+- **Abas no Painel Direito (\`[Propriedades] | [Camadas]\`)**: inspecione toda a hierarquia de pastas/grupos e camadas do seu arquivo \`.psd\` ou \`.psb\` sem abrir o Photoshop.
+- **Carregamento Inteligente em 2 Estágios**: abertura instantânea da imagem composta + metadados no Estágio 1, decodificando pixels individuais das camadas sob demanda no Estágio 2.
+- **Interatividade Completa**:
+  - **Mostrar / Ocultar (\`👁\`)**: ligue ou desligue camadas e grupos recompondo o preview em tempo real.
+  - **Modo Solo**: clique em qualquer camada para isolá-la no palco; clique novamente ou em *"Original"* para restaurar.
+  - **Exportar Camada Individual (\`⬇\`)**: extraia qualquer camada ou grupo diretamente como \`.png\` transparente.
 
-### 🖱️ Abertura Rápida com Duplo Clique
-- **Aplicativo Padrão do Windows**: clique duplo em qualquer arquivo (ex.: \`.psd\`) abre imediatamente no programa padrão (como Adobe Photoshop). Pastas continuam navegando normalmente.
+### 🖼️ Suporte Completo a PSB (Grande Formato) e TIFF Nativo
+- **Suporte a \`.psb\` (Large Document Format)**: leitura ultrarrápida de cabeçalho e miniatura JPEG embutida (\`Resource 1036\`) em < 2ms via file descriptor parcial, mais suporte completo a preview e camadas.
+- **Decodificador Nativo de \`.tif\` / \`.tiff\`**: renderização direta de arquivos TIFF (RGB, CMYK, 8/16 bits, compressão LZW/Deflate) com suporte a **TIFFs multipáginas** (\`PgUp\` / \`PgDn\`) e exportação para PNG.
 
-### 🧭 Histórico de Navegação de Pastas (Voltar / Avançar)
-- Botões \`◀\` e \`▶\` integrados à barra de arquivos com atalhos de teclado \`Alt + ←\` e \`Alt + →\`.
-
-### 🎯 Visualizador: Zoom Ancorado no Cursor e Pan com Espaço
-- **Zoom Focal**: aproximação/afastamento proporcional mantendo exatamente o ponto sob o cursor do mouse (estilo Photoshop/Figma).
-- **Pan com Barra de Espaço**: segurar \`Espaço\` ativa a mãozinha para arrastar o palco.
-- **Feedback Visual**: spinner de carregamento ao abrir PSDs, PDFs e mídias pesadas.
-
-### ⌨️ Central de Atalhos de Teclado (?)
-- Novo modal de atalhos acessível por \`?\` ou botão na barra de título.
-- Novos atalhos: \`F11\` (Tela Cheia), \`Ctrl+F\` (Busca), \`1\` a \`5\` (Estrelas), \`R\` (Girar 90°), \`+\` / \`-\` / \`Backspace\` (Zoom).
-
-### 🖼️ Exportação Rápida para PNG
-- Menu de contexto com opção *"Exportar como PNG..."* para PSDs e imagens.
-
-### ⚡ Performance e Concorrência de I/O
-- Divisão em lotes balanceados na leitura de diretórios (\`fs:readdir\`), evitando gargalos no Windows.
+### ⊞ Modo Galeria de Miniaturas (Thumbnails)
+- **Botão \`⊞ Miniaturas\` (Tecla \`G\`)**: novo modo de exibição em grade visual ao lado dos modos Colunas e Lista.
+- **Lazy Loading Assíncrono**: geração de miniaturas sob demanda via \`IntersectionObserver\` com cache em memória para PSD, PSB, TIFF, imagens, PDFs e vídeos.
 
 ---
 
@@ -56,7 +46,7 @@ Baixe o arquivo **PSD-VIEW-${version}-portable.exe** abaixo e execute diretament
   const releasePayload = JSON.stringify({
     tag_name: `v${version}`,
     target_commitish: 'main',
-    name: `PSD VIEW v${version} — Busca por Pasta, Zoom no Cursor, Histórico e Atalhos`,
+    name: `PSD VIEW v${version} — Árvore de Camadas, Suporte a PSB/TIFF e Galeria de Miniaturas`,
     body: bodyText,
     draft: false,
     prerelease: false

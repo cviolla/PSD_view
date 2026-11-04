@@ -1,7 +1,7 @@
 {
   "name": "psd-view",
-  "version": "0.1.2",
-  "description": "PSD VIEW - explorer offline e rápido para PSD, imagens, PDFs e vídeos",
+  "version": "0.1.3",
+  "description": "PSD VIEW - explorer offline e rápido para PSD, PSB, TIFF, imagens, PDFs e vídeos",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
@@ -13,7 +13,8 @@
   "license": "UNLICENSED",
   "dependencies": {
     "ag-psd": "^28.0.0",
-    "pdfjs-dist": "^6.4.299"
+    "pdfjs-dist": "^6.4.299",
+    "utif": "^3.1.0"
   },
   "devDependencies": {
     "electron": "33.4.11",
@@ -43,7 +44,9 @@
     ],
     "win": {
       "icon": "build/icon.ico",
-      "target": ["portable"]
+      "target": [
+        "portable"
+      ]
     },
     "portable": {
       "artifactName": "PSD-VIEW-${version}-portable.exe"

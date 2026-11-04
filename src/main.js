@@ -97,6 +97,80 @@ ipcMain.handle('fs:readfile', async (_e, file) => {
   return buf; // Uint8Array no renderer
 });
 
+// Extrai cabeçalho e miniatura JPEG embutida (Resource 1036) de PSD/PSB lendo apenas os primeiros KBs
+ipcMain.handle('fs:psd-header', async (_e, file) => {
+  let fh;
+  try {
+    fh = await fs.promises.open(file, 'r');
+    const st = await fh.stat();
+    const head = Buffer.alloc(30);
+    const { bytesRead } = await fh.read(head, 0, 30, 0);
+    if (bytesRead < 30 || head.toString('ascii', 0, 4) !== '8BPS') return null;
+
+    const version = head.readUInt16BE(4); // 1 = PSD, 2 = PSB
+    const channels = head.readUInt16BE(12);
+    const height = head.readUInt32BE(14);
+    const width = head.readUInt32BE(18);
+    const depth = head.readUInt16BE(22);
+    const colorMode = head.readUInt16BE(24);
+    const colorModeLen = head.readUInt32BE(26);
+
+    const resOffset = 30 + colorModeLen;
+    const lenBuf = Buffer.alloc(4);
+    const rLen = await fh.read(lenBuf, 0, 4, resOffset);
+    let thumbDataUrl = null;
+
+    if (rLen.bytesRead === 4) {
+      const resLen = lenBuf.readUInt32BE(0);
+      const readLen = Math.min(resLen, 16 * 1024 * 1024); // máx 16MB para recursos
+      if (readLen > 0) {
+        const resBuf = Buffer.alloc(readLen);
+        const rData = await fh.read(resBuf, 0, readLen, resOffset + 4);
+        const limit = rData.bytesRead;
+        let pos = 0;
+        while (pos + 12 <= limit) {
+          if (resBuf.toString('ascii', pos, pos + 4) !== '8BIM') break;
+          const id = resBuf.readUInt16BE(pos + 4);
+          const nameLen = resBuf[pos + 6];
+          const namePad = (nameLen + 1) % 2 === 0 ? (nameLen + 1) : (nameLen + 2);
+          const sizePos = pos + 6 + namePad;
+          if (sizePos + 4 > limit) break;
+          const dataSize = resBuf.readUInt32BE(sizePos);
+          const dataStart = sizePos + 4;
+          const dataEnd = dataStart + dataSize;
+          if (dataEnd > limit) break;
+
+          if ((id === 1036 || id === 1033) && dataSize > 28) {
+            const fmt = resBuf.readUInt32BE(dataStart);
+            if (fmt === 1) {
+              const jpegBuf = resBuf.subarray(dataStart + 28, dataEnd);
+              thumbDataUrl = 'data:image/jpeg;base64,' + jpegBuf.toString('base64');
+              break;
+            }
+          }
+          pos = dataEnd + (dataSize % 2 === 1 ? 1 : 0);
+        }
+      }
+    }
+
+    return {
+      version,
+      isPsb: version === 2,
+      channels,
+      width,
+      height,
+      depth,
+      colorMode,
+      fileSize: st.size,
+      thumbDataUrl
+    };
+  } catch {
+    return null;
+  } finally {
+    if (fh) await fh.close().catch(() => {});
+  }
+});
+
 ipcMain.handle('fs:writefile', async (_e, filePath, base64Data) => {
   const buffer = Buffer.from(base64Data, 'base64');
   await fs.promises.writeFile(filePath, buffer);

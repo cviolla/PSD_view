@@ -92,19 +92,25 @@ Card horizontal posicionado no topo, logo acima da janela de preview, exibindo a
 - Suporta zoom, arrastar e rotação.
 
 ### 2.6 Lista de arquivos (central inferior)
-- Exibe pastas e arquivos em **múltiplas colunas**, com ícone por tipo.
-- Possui **alternador (toggle)** no canto superior esquerdo para trocar o modo de exibição (ex.: lista/grade).
+- Exibe pastas e arquivos em **múltiplas colunas**, **lista linear** ou **galeria de miniaturas** (`⊞ Miniaturas`, tecla `G`).
+- No modo **Galeria de Miniaturas**, gera *thumbnails* sob demanda (*lazy-loading* via `IntersectionObserver`) para PSD, PSB, TIFF, imagens, PDFs e vídeos.
 
-### 2.7 Painel de Propriedades (direita)
+### 2.7 Painel Direito — Abas Propriedades e Camadas
+- **Aba Propriedades:**
 | Campo | Descrição |
 |---|---|
-| **Tipo** | Nome e extensão (ex.: `IMAGE.jpg`) |
+| **Tipo** | Nome, extensão e formato detalhado (ex.: `PSD`, `PSB · Grande Formato`, `TIFF`) |
 | **Tamanho** | Tamanho em KB/MB/GB |
 | **Caminho** | Caminho do arquivo (abreviado quando longo) |
 | **Última modificação** | Data de modificação |
+| **Dimensões / Tempo** | Resolução em pixels/pontos, contagem de camadas/páginas e tempo de leitura em `ms` |
 | **Classificação** | Nota de 1 a 5 estrelas, definida pelo usuário |
 | **Mostrar no explorer** | Abre o local do arquivo no gerenciador do sistema |
 | **Acesso Rápido (Fixados)** | Card para fixar até 3 arquivos frequentemente usados com acesso direto |
+
+- **Aba Camadas (Inspetor PSD/PSB — tecla `L`):**
+  - Exibe a árvore hierárquica de camadas e grupos na mesma ordem do Adobe Photoshop.
+  - Permite alternar visibilidade (`👁`), isolar camada no modo **Solo** (clicando na camada), visualizar modo de mesclagem e opacidade, e exportar qualquer camada individualmente como `.png` transparente (`⬇`).
 
 ---
 

@@ -4,6 +4,36 @@ Todas as modificações notáveis neste projeto serão documentadas neste arquiv
 
 ---
 
+## [0.1.3] — 04/11/2026
+
+### 📑 Inspetor e Árvore de Camadas Interativa (PSD / PSB)
+- **Abas no Painel Direito (`[Propriedades] | [Camadas]`)**: alternância rápida entre os metadados do arquivo e a árvore hierárquica de camadas do Photoshop, com contador de camadas em badge dinâmico.
+- **Atalho Rápido no Palco (`⧉` / Tecla `L`)**: botão dedicado na barra flutuante do visualizador para abrir/fechar o inspetor de camadas.
+- **Carregamento Inteligente em 2 Estágios**:
+  - **Estágio 1 (Instantâneo)**: carrega a imagem composta e toda a estrutura da árvore de camadas (nomes, pastas/grupos, visibilidade, opacidade e modos de mesclagem) sem decodificar os pixels individuais de cada camada.
+  - **Estágio 2 (Sob Demanda)**: decodifica os buffers de cada camada somente quando o usuário interage com a árvore (ocultar/mostrar camada, isolar em modo Solo ou exportar camada).
+- **Controles Interativos por Camada**:
+  - **Mostrar / Ocultar (`👁`)**: liga/desliga camadas ou grupos inteiros recompondo o palco em tempo real.
+  - **Modo Solo (Isolar Camada)**: clique sobre qualquer linha da camada para isolá-la no palco com fundo transparente; clique novamente ou em *"Original"* para restaurar a composição completa.
+  - **Exportação Individual de Camada (`⬇`)**: salva qualquer camada ou grupo isoladamente como arquivo `.png` transparente direto pela árvore.
+
+### 🖼️ Suporte Completo a PSB (Grande Formato) e TIFF Nativo
+- **Arquivos `.psb` (Large Document Format)**:
+  - Leitura nativa de cabeçalho e seção de recursos (`fs:psd-header`) usando descritores de arquivo parciais (`fs.promises.open`), extraindo dimensões reais e a miniatura JPEG embutida (Resource 1036) em menos de 2ms mesmo em arquivos de múltiplos gigabytes.
+  - Renderização completa do composite e árvore de camadas para arquivos `.psb`.
+- **Decodificador Nativo de `.tif` / `.tiff` (`UTIF.js`)**:
+  - Suporte completo a arquivos TIFF de 8 e 16 bits, RGB, CMYK e tons de cinza, com compressão LZW, Deflate/ZIP, PackBits ou sem compressão (que o Chromium nativamente não exibe na tag `<img>`).
+  - **TIFF Multi-Páginas**: suporte a navegação entre páginas de documentos TIFF multipáginas usando os controles inferiores (`◀`, `▶`, `PgUp` e `PgDn`).
+  - **Exportação para PNG**: conversão direta de arquivos `.tif`/`.tiff` e `.psb` para `.png` pelo menu de contexto.
+
+### ⊞ Modo Galeria de Miniaturas (Thumbnails Lazy-Loaded)
+- **Botão `⊞ Miniaturas` (Tecla `G`)**: novo modo de visualização em grade de cartões visuais na barra da lista de arquivos, preservando os modos *Múltiplas Colunas* e *Lista Linear*.
+- **Motor Assíncrono com `IntersectionObserver`**:
+  - Gera miniaturas exclusivamente para os cartões visíveis na rolagem com fila limitada a 3 workers simultâneos e cache em memória (`thumbCache`).
+  - Extração instantânea de miniaturas de `.psd` e `.psb` via recurso JPEG embutido no cabeçalho (`Resource 1036`), além de miniaturas para `.tif`/`.tiff`, imagens, PDFs (1ª página) e vídeos.
+
+---
+
 ## [0.1.2] — 04/11/2026
 
 ### 🔍 Busca com Escopo Dinâmico (Pasta Atual vs. Todo o PC)

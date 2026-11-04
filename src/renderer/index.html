@@ -94,6 +94,7 @@
           <span id="pdf-page-indicator">1 / 1</span>
           <button id="btn-pdf-next" title="Próxima página (PgDn)">▶</button>
         </div>
+        <button id="btn-layers-toggle" class="hidden" title="Inspecionar Camadas do PSD/PSB (L)">⧉</button>
         <button id="btn-fit" title="Adequar à tela (Reset Zoom)">⛶</button>
         <button id="btn-bg" title="Alternar fundo (Xadrez escuro / Xadrez claro / Branco / Preto)">▦</button>
         <button id="btn-zoom-in" title="Aumentar zoom">+</button>
@@ -102,49 +103,69 @@
       </div>
       <div id="stage"><div id="placeholder">Selecione um arquivo para pré-visualizar</div></div>
       <div id="fs-hint">ESC pra sair</div>
-      <div id="hint">Roda do mouse / ← →: Navegar • Ctrl + Roda: Zoom • Arraste: Mover • R: Girar • Esc: Fechar</div>
+      <div id="hint">Roda do mouse / ← →: Navegar • Ctrl + Roda: Zoom • Arraste: Mover • R: Girar • L: Camadas • G: Miniaturas</div>
     </section>
 
     <aside id="props" class="panel">
-      <h2>Propriedades</h2>
-      <dl>
-        <dt>Tipo</dt><dd id="p-tipo">—</dd>
-        <dt>Tamanho</dt><dd id="p-tam">—</dd>
-        <dt>Caminho</dt><dd id="p-cam" title="">—</dd>
-        <dt>Última modificação</dt><dd id="p-mod">—</dd>
-        <dt>Classificação</dt><dd id="p-stars"></dd>
-        <dt>Dimensões</dt><dd id="p-dim">—</dd>
-        <dt>Tempo de leitura</dt><dd id="p-time">—</dd>
-      </dl>
-      <button id="btn-reveal" class="action-reveal">
-        <span>Mostrar no explorer</span>
-        <img src="../../icons/Close-Pane.png" alt="" class="reveal-icon" />
-      </button>
-      <button id="btn-open-app" class="action">Abrir no programa padrão ↗</button>
-      <button id="btn-fav" class="action-fav">
-        <img src="../../icons/Heart.png" alt="" class="fav-heart" />
-        <span id="btn-fav-label">Favoritar pasta atual</span>
-      </button>
-      <button id="btn-pin" class="action-pin">
-        <img src="../../icons/Pin.png" alt="" class="pin-icon" />
-        <span id="btn-pin-label">Fixar no Acesso Rápido</span>
-      </button>
+      <div class="props-tabs">
+        <button id="tab-btn-props" class="props-tab active" data-tab="props" title="Propriedades do arquivo">Propriedades</button>
+        <button id="tab-btn-layers" class="props-tab" data-tab="layers" title="Árvore de Camadas (L)">
+          <span>Camadas</span>
+          <span id="layers-badge" class="layers-badge">0</span>
+        </button>
+      </div>
 
-      <!-- Card de Acesso Rápido para arquivos frequentemente usados -->
-      <section id="quick-access-card" class="quick-access-card">
-        <div class="qa-header">
-          <div class="qa-title-wrap">
-            <img src="../../icons/Pin.png" alt="" class="qa-header-icon" />
-            <span class="qa-title">Acesso Rápido</span>
+      <div id="pane-props" class="tab-pane">
+        <dl>
+          <dt>Tipo</dt><dd id="p-tipo">—</dd>
+          <dt>Tamanho</dt><dd id="p-tam">—</dd>
+          <dt>Caminho</dt><dd id="p-cam" title="">—</dd>
+          <dt>Última modificação</dt><dd id="p-mod">—</dd>
+          <dt>Classificação</dt><dd id="p-stars"></dd>
+          <dt>Dimensões</dt><dd id="p-dim">—</dd>
+          <dt>Tempo de leitura</dt><dd id="p-time">—</dd>
+        </dl>
+        <button id="btn-reveal" class="action-reveal">
+          <span>Mostrar no explorer</span>
+          <img src="../../icons/Close-Pane.png" alt="" class="reveal-icon" />
+        </button>
+        <button id="btn-open-app" class="action">Abrir no programa padrão ↗</button>
+        <button id="btn-fav" class="action-fav">
+          <img src="../../icons/Heart.png" alt="" class="fav-heart" />
+          <span id="btn-fav-label">Favoritar pasta atual</span>
+        </button>
+        <button id="btn-pin" class="action-pin">
+          <img src="../../icons/Pin.png" alt="" class="pin-icon" />
+          <span id="btn-pin-label">Fixar no Acesso Rápido</span>
+        </button>
+
+        <!-- Card de Acesso Rápido para arquivos frequentemente usados -->
+        <section id="quick-access-card" class="quick-access-card">
+          <div class="qa-header">
+            <div class="qa-title-wrap">
+              <img src="../../icons/Pin.png" alt="" class="qa-header-icon" />
+              <span class="qa-title">Acesso Rápido</span>
+            </div>
+            <span id="qa-badge" class="qa-badge">0/3</span>
           </div>
-          <span id="qa-badge" class="qa-badge">0/3</span>
-        </div>
-        <div id="qa-list" class="qa-list"></div>
-      </section>
+          <div id="qa-list" class="qa-list"></div>
+        </section>
 
-      <!-- Marca d'água lateral direita oficial -->
-      <div id="watermark">
-        <img src="../../icons/Agrupar 2 copiar.png" alt="PSD VIEW" />
+        <!-- Marca d'água lateral direita oficial -->
+        <div id="watermark">
+          <img src="../../icons/Agrupar 2 copiar.png" alt="PSD VIEW" />
+        </div>
+      </div>
+
+      <div id="pane-layers" class="tab-pane hidden">
+        <div class="layers-toolbar">
+          <button id="btn-layers-reset" class="layers-tool-btn" title="Restaurar visão composta original do PSD">Visão Composta</button>
+          <button id="btn-layers-all" class="layers-tool-btn" title="Mostrar ou ocultar todas as camadas">👁 Todas</button>
+        </div>
+        <div id="layers-status" class="layers-status hidden"></div>
+        <div id="layers-tree" class="layers-tree">
+          <div class="layers-empty">Selecione um arquivo .PSD ou .PSB para inspecionar suas camadas.</div>
+        </div>
       </div>
     </aside>
 
@@ -176,6 +197,9 @@
         <button id="toggle-view" class="view-toggle-btn" title="Modo de exibição: Múltiplas Colunas (clique para Lista linear)" aria-label="Alternar exibição">
           <img id="toggle-view-img" src="../../icons/ON.png" alt="Alternar exibição" class="toggle-view-icon" />
         </button>
+        <button id="btn-gallery" class="gallery-toggle-btn" title="Alternar Galeria de Miniaturas (G)">
+          <span>⊞ Miniaturas</span>
+        </button>
         <button id="btn-back" class="nav-dir-btn" title="Voltar (Alt + ←)" disabled>◀</button>
         <button id="btn-forward" class="nav-dir-btn" title="Avançar (Alt + →)" disabled>▶</button>
         <button id="btn-up" class="nav-dir-btn" title="Subir um nível (Alt + ↑)">↑</button>
@@ -204,7 +228,7 @@
   <div id="about" class="hidden">
     <div class="card">
       <img src="../../ISO2.png" alt="PSD VIEW" id="about-logo" />
-      <p>PSD VIEW - Versão 0.1.2<br>Explorador de Arquivos by @cviolla</p>
+      <p>PSD VIEW - Versão 0.1.3<br>Explorador de Arquivos by @cviolla</p>
       <span class="about-esc">ESC pra sair</span>
     </div>
   </div>
@@ -221,13 +245,15 @@
           <div class="shortcut-row"><kbd>Alt</kbd> + <kbd>←</kbd><span>Voltar pasta</span></div>
           <div class="shortcut-row"><kbd>Alt</kbd> + <kbd>→</kbd><span>Avançar pasta</span></div>
           <div class="shortcut-row"><kbd>Alt</kbd> + <kbd>↑</kbd><span>Subir nível</span></div>
+          <div class="shortcut-row"><kbd>G</kbd><span>Galeria de Miniaturas</span></div>
           <div class="shortcut-row"><kbd>Ctrl</kbd> + <kbd>F</kbd><span>Buscar arquivos</span></div>
           <div class="shortcut-row"><kbd>F5</kbd><span>Atualizar pasta</span></div>
           <div class="shortcut-row"><kbd>Enter</kbd><span>Abrir pasta / arquivo</span></div>
           <div class="shortcut-row"><kbd>2x Clique</kbd><span>Abrir no programa padrão</span></div>
         </div>
         <div class="shortcuts-col">
-          <h4>Visualizador & Zoom</h4>
+          <h4>Visualizador & Camadas</h4>
+          <div class="shortcut-row"><kbd>L</kbd><span>Aba Árvore de Camadas</span></div>
           <div class="shortcut-row"><kbd>Ctrl</kbd> + <kbd>Roda</kbd><span>Zoom no cursor</span></div>
           <div class="shortcut-row"><kbd>Espaço</kbd> + <kbd>Arrastar</kbd><span>Mover imagem (Pan)</span></div>
           <div class="shortcut-row"><kbd>+</kbd> / <kbd>-</kbd><span>Aumentar / Diminuir zoom</span></div>
@@ -252,6 +278,8 @@
   </div>
 
   <script src="../../node_modules/ag-psd/dist/bundle.js"></script>
+  <script src="../../node_modules/utif/node_modules/pako/dist/pako.min.js"></script>
+  <script src="../../node_modules/utif/UTIF.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

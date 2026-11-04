@@ -4,6 +4,7 @@ contextBridge.exposeInMainWorld('api', {
   home: () => ipcRenderer.invoke('fs:home'),
   readdir: (d) => ipcRenderer.invoke('fs:readdir', d),
   readfile: (f) => ipcRenderer.invoke('fs:readfile', f),
+  psdHeader: (f) => ipcRenderer.invoke('fs:psd-header', f),
   writefile: (f, d) => ipcRenderer.invoke('fs:writefile', f, d),
   saveFileDialog: (name) => ipcRenderer.invoke('fs:saveFileDialog', name),
   stat: (f) => ipcRenderer.invoke('fs:stat', f),

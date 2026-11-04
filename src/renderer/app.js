@@ -50,9 +50,15 @@ const state = {
   nav: { rot: 0, zoom: 1, x: 0, y: 0 }, 
   token: 0,
   viewMode: store.get('viewMode', 'columns'),
+  lastTextMode: store.get('lastTextMode', 'columns'),
+  rightTab: 'props',
+  soloLayerId: null,
   pdfDoc: null,
   pdfPage: 1,
-  pdfTotalPages: 1
+  pdfTotalPages: 1,
+  tiffMultiPage: false,
+  tiffPage: 1,
+  tiffTotalPages: 1
 };
 
 /* ---------- Janela / Tema ---------- */
@@ -386,33 +392,212 @@ function renderQuickAccess() {
   updateQuickAccessActive();
 }
 
-/* ---------- Alternância de Visualização da Lista (Colunas / Lista) ---------- */
-function applyViewMode(mode) {
+/* ---------- Alternância de Visualização da Lista (Colunas / Lista / Galeria de Miniaturas) ---------- */
+function applyViewMode(mode, reRender = true) {
+  if (mode === 'columns' || mode === 'list') {
+    state.lastTextMode = mode;
+    store.set('lastTextMode', mode);
+  }
   state.viewMode = mode;
   store.set('viewMode', mode);
   const fl = $('file-list');
   const btn = $('toggle-view');
   const img = $('toggle-view-img');
+  const btnGal = $('btn-gallery');
   if (!fl || !btn) return;
 
-  if (mode === 'list') {
-    fl.classList.remove('view-columns');
+  fl.classList.remove('view-columns', 'view-list', 'view-gallery');
+  if (mode === 'gallery') {
+    fl.classList.add('view-gallery');
+    if (btnGal) btnGal.classList.add('active');
+    btn.title = 'Alternar para modo de Lista ou Colunas';
+  } else if (mode === 'list') {
     fl.classList.add('view-list');
+    if (btnGal) btnGal.classList.remove('active');
     if (img) img.src = '../../icons/OFF.png';
     btn.title = 'Modo de exibição: Lista linear (clique para Múltiplas Colunas)';
   } else {
-    fl.classList.remove('view-list');
     fl.classList.add('view-columns');
+    if (btnGal) btnGal.classList.remove('active');
     if (img) img.src = '../../icons/ON.png';
     btn.title = 'Modo de exibição: Múltiplas Colunas (clique para Lista linear)';
+  }
+
+  if (reRender && (state.dir || state.searchActive)) {
+    renderList();
   }
 }
 
 const toggleViewBtn = $('toggle-view');
 if (toggleViewBtn) {
   toggleViewBtn.onclick = () => {
-    applyViewMode(state.viewMode === 'columns' ? 'list' : 'columns');
+    if (state.viewMode === 'gallery') {
+      applyViewMode(state.lastTextMode || 'columns');
+    } else {
+      applyViewMode(state.viewMode === 'columns' ? 'list' : 'columns');
+    }
   };
+}
+
+const btnGallery = $('btn-gallery');
+if (btnGallery) {
+  btnGallery.onclick = () => {
+    if (state.viewMode === 'gallery') {
+      applyViewMode(state.lastTextMode || 'columns');
+    } else {
+      applyViewMode('gallery');
+    }
+  };
+}
+
+/* ---------- Sistema de Miniaturas (Lazy Loading + Fila de Concorrência) ---------- */
+const thumbCache = new Map(); // path -> dataUrl ou URL
+let thumbQueue = [];
+let activeThumbWorkers = 0;
+const MAX_THUMB_WORKERS = 3;
+
+const thumbObserver = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => {
+    if (entry.isIntersecting) {
+      const card = entry.target;
+      thumbObserver.unobserve(card);
+      const itemRef = card._itemRef;
+      if (itemRef) enqueueThumb(card, itemRef);
+    }
+  });
+}, { root: $('file-list'), rootMargin: '140px' });
+
+function enqueueThumb(cardEl, item) {
+  if (thumbCache.has(item.path)) {
+    applyThumbToCard(cardEl, thumbCache.get(item.path));
+    return;
+  }
+  thumbQueue.push({ cardEl, item });
+  processThumbQueue();
+}
+
+function applyThumbToCard(cardEl, src) {
+  if (!cardEl || !src || !cardEl.isConnected) return;
+  const box = cardEl.querySelector('.thumb-box');
+  if (!box) return;
+  const existing = box.querySelector('.thumb-img');
+  if (existing) {
+    existing.src = src;
+    return;
+  }
+  const img = new Image();
+  img.className = 'thumb-img';
+  img.alt = '';
+  img.onload = () => {
+    const fb = box.querySelector('.thumb-fallback-icon');
+    if (fb) fb.style.display = 'none';
+  };
+  img.src = src;
+  box.insertBefore(img, box.firstChild);
+}
+
+async function processThumbQueue() {
+  while (activeThumbWorkers < MAX_THUMB_WORKERS && thumbQueue.length > 0) {
+    const task = thumbQueue.shift();
+    if (!task.cardEl.isConnected) continue;
+    activeThumbWorkers++;
+    generateThumbnail(task.item)
+      .then((url) => {
+        if (url) {
+          thumbCache.set(task.item.path, url);
+          if (thumbCache.size > 400) thumbCache.delete(thumbCache.keys().next().value);
+          applyThumbToCard(task.cardEl, url);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        activeThumbWorkers--;
+        processThumbQueue();
+      });
+  }
+}
+
+async function generateThumbnail(item) {
+  if (item.isDir) return null;
+  const e = ext(item.name);
+  if (item.kind === 'psd') {
+    // 1. Extração ultrarrápida do recurso JPEG embutido (1036) via header reader (< 2ms)
+    const hdr = await api.psdHeader(item.path);
+    if (hdr && hdr.thumbDataUrl) return hdr.thumbDataUrl;
+    // 2. Fallback para composite se o arquivo for <= 300MB
+    if (item.size <= 300 * 1024 * 1024) {
+      const entry = await psdToData(item.path);
+      if (entry?.canvas) return canvasToThumbDataUrl(entry.canvas, 160);
+    }
+    return null;
+  }
+  if (e === 'tif' || e === 'tiff') {
+    const tiffData = await tiffToCanvas(item.path, 0);
+    if (tiffData?.canvas) return canvasToThumbDataUrl(tiffData.canvas, 160);
+    return null;
+  }
+  if (item.kind === 'image') {
+    return fileUrl(item.path);
+  }
+  if (item.kind === 'pdf') {
+    if (item.size > 80 * 1024 * 1024) return null;
+    const lib = await getPdfLib();
+    const buf = await api.readfile(item.path);
+    const pdfDoc = await lib.getDocument({ data: new Uint8Array(buf) }).promise;
+    const page = await pdfDoc.getPage(1);
+    const vp = page.getViewport({ scale: 0.4 });
+    const c = document.createElement('canvas');
+    c.width = vp.width;
+    c.height = vp.height;
+    await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+    return c.toDataURL('image/jpeg', 0.8);
+  }
+  if (item.kind === 'video') {
+    return new Promise((resolve) => {
+      const v = document.createElement('video');
+      v.muted = true;
+      v.preload = 'metadata';
+      let done = false;
+      const finish = (val) => {
+        if (done) return;
+        done = true;
+        v.removeAttribute('src');
+        v.load();
+        resolve(val);
+      };
+      const timer = setTimeout(() => finish(null), 2500);
+      v.onloadeddata = () => {
+        v.currentTime = Math.min(1, (v.duration || 0) * 0.15);
+      };
+      v.onseeked = () => {
+        clearTimeout(timer);
+        try {
+          const c = document.createElement('canvas');
+          const ratio = (v.videoWidth || 160) / (v.videoHeight || 90);
+          c.width = 160;
+          c.height = Math.max(60, Math.round(160 / ratio));
+          c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+          finish(c.toDataURL('image/jpeg', 0.78));
+        } catch {
+          finish(null);
+        }
+      };
+      v.onerror = () => { clearTimeout(timer); finish(null); };
+      v.src = fileUrl(item.path);
+    });
+  }
+  return null;
+}
+
+function canvasToThumbDataUrl(srcCanvas, maxDim = 160) {
+  const w = srcCanvas.width || 1;
+  const h = srcCanvas.height || 1;
+  const scale = Math.min(1, maxDim / Math.max(w, h));
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(w * scale));
+  c.height = Math.max(1, Math.round(h * scale));
+  c.getContext('2d').drawImage(srcCanvas, 0, 0, c.width, c.height);
+  return c.toDataURL('image/png');
 }
 
 function updateActiveDrive() {
@@ -478,6 +663,8 @@ async function openDir(dir, recordHistory = true) {
 }
 
 function renderList() {
+  thumbObserver.disconnect();
+  thumbQueue = [];
   const q = state.query.toLowerCase();
   const source = state.searchActive ? state.searchItems : state.items;
   const list = source.filter((i) => {
@@ -489,18 +676,42 @@ function renderList() {
   const scopeSuffix = state.searchScope === 'folder' ? ' (nesta pasta)' : ' (busca global)';
   $('count').textContent = list.length + ' itens' + (state.searchActive ? (state.searchDone ? scopeSuffix : ' — buscando…') : '');
   const frag = document.createDocumentFragment();
+  const isGallery = state.viewMode === 'gallery';
   
   const LIMIT = 3000;
   list.slice(0, LIMIT).forEach((i) => {
     const el = document.createElement('div');
-    el.className = 'item' + (state.selected?.path === i.path ? ' sel' : '');
+    const isSel = state.selected?.path === i.path;
+    el.className = 'item' + (isGallery ? ' gallery-card' : '') + (isSel ? ' sel' : '');
     el.title = state.searchActive ? i.path : i.name; 
     el.dataset.path = i.path;
     
-    // Ícone oficial baseado no tipo de arquivo
     const iconSrc = iconPaths[i.kind] || iconPaths.other;
-    const sub = state.searchActive ? `<em class="item-path">${esc(i.path.slice(0, Math.max(0, i.path.length - i.name.length - 1)))}</em>` : '';
-    el.innerHTML = `<img src="${iconSrc}" class="item-file-icon" alt="" /><span>${esc(i.name)}${sub}</span>`;
+    if (isGallery) {
+      const badgeLabel = i.isDir ? 'PASTA' : (ext(i.name).toUpperCase() || 'ARQ');
+      const subText = state.searchActive
+        ? esc(i.path.slice(0, Math.max(0, i.path.length - i.name.length - 1)))
+        : (i.isDir ? 'Pasta' : fmtSize(i.size));
+      el.innerHTML = `
+        <div class="thumb-box">
+          <img src="${iconSrc}" class="thumb-fallback-icon" alt="" />
+          <span class="thumb-ext-badge">${esc(badgeLabel)}</span>
+        </div>
+        <div class="gallery-card-title">${esc(i.name)}</div>
+        <div class="gallery-card-sub">${subText}</div>
+      `;
+      if (!i.isDir && ['image', 'psd', 'pdf', 'video'].includes(i.kind)) {
+        el._itemRef = i;
+        if (thumbCache.has(i.path)) {
+          applyThumbToCard(el, thumbCache.get(i.path));
+        } else {
+          thumbObserver.observe(el);
+        }
+      }
+    } else {
+      const sub = state.searchActive ? `<em class="item-path">${esc(i.path.slice(0, Math.max(0, i.path.length - i.name.length - 1)))}</em>` : '';
+      el.innerHTML = `<img src="${iconSrc}" class="item-file-icon" alt="" /><span>${esc(i.name)}${sub}</span>`;
+    }
     
     el.onclick = () => select(i, el);
     el.ondblclick = () => (i.isDir ? openDir(i.path) : api.open(i.path));
@@ -608,14 +819,51 @@ document.querySelectorAll('#filters button').forEach((b) => b.onclick = () => {
   renderList();
 });
 
+/* ---------- Abas do Painel Direito (Propriedades / Camadas) ---------- */
+function setRightTab(tab) {
+  state.rightTab = tab;
+  const btnProps = $('tab-btn-props');
+  const btnLayers = $('tab-btn-layers');
+  const paneProps = $('pane-props');
+  const paneLayers = $('pane-layers');
+  const btnViewerLayers = $('btn-layers-toggle');
+
+  if (btnProps) btnProps.classList.toggle('active', tab === 'props');
+  if (btnLayers) btnLayers.classList.toggle('active', tab === 'layers');
+  if (paneProps) paneProps.classList.toggle('hidden', tab !== 'props');
+  if (paneLayers) paneLayers.classList.toggle('hidden', tab !== 'layers');
+  if (btnViewerLayers) btnViewerLayers.classList.toggle('active', tab === 'layers');
+}
+
+if ($('tab-btn-props')) $('tab-btn-props').onclick = () => setRightTab('props');
+if ($('tab-btn-layers')) $('tab-btn-layers').onclick = () => setRightTab('layers');
+if ($('btn-layers-toggle')) {
+  $('btn-layers-toggle').onclick = () => {
+    setRightTab(state.rightTab === 'layers' ? 'props' : 'layers');
+  };
+}
+
 /* ---------- Seleção / Preview / Propriedades ---------- */
 function select(item, el) {
   state.selected = item;
+  state.soloLayerId = null;
   document.querySelectorAll('.item.sel').forEach((x) => x.classList.remove('sel'));
   el?.classList.add('sel');
   showProps(item);
   updatePinBtn();
   updateQuickAccessActive();
+  const btnLayersToggle = $('btn-layers-toggle');
+  if (btnLayersToggle) {
+    btnLayersToggle.classList.toggle('hidden', item.kind !== 'psd');
+  }
+  if (item.kind !== 'psd') {
+    const badge = $('layers-badge');
+    if (badge) badge.classList.add('hidden');
+    const tree = $('layers-tree');
+    if (tree) tree.innerHTML = '<div class="layers-empty">Selecione um arquivo PSD ou PSB para inspecionar suas camadas</div>';
+    const status = $('layers-status');
+    if (status) status.classList.add('hidden');
+  }
   if (['image', 'psd', 'video', 'pdf'].includes(item.kind)) {
     preview(item);
   } else {
@@ -624,8 +872,17 @@ function select(item, el) {
   prefetch(item);
 }
 
+function getFormatDescription(item) {
+  if (item.isDir) return 'Pasta';
+  const e = ext(item.name);
+  if (e === 'psb') return `${item.name} (PSB · Grande Formato)`;
+  if (e === 'psd') return `${item.name} (PSD · Photoshop)`;
+  if (e === 'tif' || e === 'tiff') return `${item.name} (TIFF)`;
+  return item.name;
+}
+
 function showProps(item) {
-  $('p-tipo').textContent = item.isDir ? 'Pasta' : item.name;
+  $('p-tipo').textContent = getFormatDescription(item);
   $('p-tam').textContent = item.isDir ? '—' : fmtSize(item.size);
   $('p-cam').textContent = item.path.length > 34 ? '…' + item.path.slice(-32) : item.path;
   $('p-cam').title = item.path;
@@ -657,32 +914,516 @@ function renderStars() {
 $('btn-reveal').onclick = () => state.selected && api.reveal(state.selected.path);
 $('btn-open-app').onclick = () => state.selected && api.open(state.selected.path);
 
-const psdCache = new Map(); // path -> canvas cache
-async function psdToCanvas(path) {
+/* ---------- Decodificador PSD / PSB em 2 Estágios + Árvore de Camadas ---------- */
+const psdCache = new Map(); // path -> { canvas, compositeCanvas, psd, layersLoaded, totalLayers, isHugeFallback }
+const MAX_BUFFER_READ_BYTES = 1800 * 1024 * 1024; // ~1.8 GB segurança para Buffer do Node
+
+function assignLayerMeta(nodes, counter = { id: 1, count: 0 }) {
+  if (!Array.isArray(nodes)) return counter;
+  for (const node of nodes) {
+    node._id = counter.id++;
+    node._origHidden = !!node.hidden;
+    if (Array.isArray(node.children)) {
+      if (typeof node._collapsed !== 'boolean') {
+        node._collapsed = node.opened === false;
+      }
+      assignLayerMeta(node.children, counter);
+    } else {
+      counter.count++;
+    }
+  }
+  return counter;
+}
+
+function syncLayerStates(srcNodes, dstNodes) {
+  if (!Array.isArray(srcNodes) || !Array.isArray(dstNodes)) return;
+  const len = Math.min(srcNodes.length, dstNodes.length);
+  for (let i = 0; i < len; i++) {
+    dstNodes[i]._id = srcNodes[i]._id;
+    dstNodes[i]._origHidden = srcNodes[i]._origHidden;
+    dstNodes[i].hidden = srcNodes[i].hidden;
+    dstNodes[i]._collapsed = srcNodes[i]._collapsed;
+    if (srcNodes[i].children && dstNodes[i].children) {
+      syncLayerStates(srcNodes[i].children, dstNodes[i].children);
+    }
+  }
+}
+
+async function psdToData(path, fileSize = 0) {
   if (psdCache.has(path)) return psdCache.get(path);
+
+  // Proteção para arquivos PSB gigantes (> 1.8 GB): usa header reader com miniatura embutida
+  if (fileSize > MAX_BUFFER_READ_BYTES) {
+    const hdr = await api.psdHeader(path);
+    const canvas = document.createElement('canvas');
+    if (hdr && hdr.thumbDataUrl) {
+      const img = new Image();
+      img.src = hdr.thumbDataUrl;
+      await img.decode();
+      canvas.width = hdr.width || img.naturalWidth || 800;
+      canvas.height = hdr.height || img.naturalHeight || 600;
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+    } else {
+      canvas.width = hdr?.width || 800;
+      canvas.height = hdr?.height || 600;
+    }
+    const entry = {
+      canvas,
+      compositeCanvas: canvas,
+      psd: { width: hdr?.width || canvas.width, height: hdr?.height || canvas.height, children: [] },
+      layersLoaded: false,
+      totalLayers: 0,
+      isHugeFallback: true
+    };
+    psdCache.set(path, entry);
+    return entry;
+  }
+
+  // Estágio 1: Leitura rápida da imagem composta + metadados da árvore de camadas (sem decodificar pixels de cada camada)
   const buf = await api.readfile(path);
   const u8 = buf.buffer ? new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength) : buf;
   let psd;
+  let layersLoaded = false;
   try {
     psd = agPsd.readPsd(u8, { skipLayerImageData: true, skipThumbnail: true, skipCompositeImageData: false });
-  } catch (err) {
+    if (!psd.canvas && psd.children && psd.children.length) {
+      // Arquivos salvos sem "Maximizar Compatibilidade" precisam das camadas no Estágio 1
+      psd = agPsd.readPsd(u8, { skipThumbnail: true });
+      layersLoaded = true;
+    }
+  } catch {
     psd = agPsd.readPsd(u8);
+    layersLoaded = true;
   }
+
+  const meta = assignLayerMeta(psd.children || []);
   let canvas = psd.canvas;
   if (!canvas) {
-    canvas = document.createElement('canvas');
-    canvas.width = psd.width || 800;
-    canvas.height = psd.height || 600;
+    canvas = composePsdLayersToCanvas(psd, null);
   }
-  psdCache.set(path, canvas);
-  if (psdCache.size > 10) psdCache.delete(psdCache.keys().next().value);
-  return canvas;
+
+  const entry = {
+    canvas,
+    compositeCanvas: canvas,
+    psd,
+    layersLoaded,
+    totalLayers: meta.count
+  };
+  psdCache.set(path, entry);
+  if (psdCache.size > 8) psdCache.delete(psdCache.keys().next().value);
+  return entry;
+}
+
+async function psdToCanvas(path, fileSize = 0) {
+  const entry = await psdToData(path, fileSize);
+  return entry.canvas;
+}
+
+async function ensurePsdLayersLoaded(path) {
+  const entry = psdCache.get(path);
+  if (!entry) return null;
+  if (entry.layersLoaded || entry.isHugeFallback) return entry;
+
+  const statusEl = $('layers-status');
+  if (statusEl) {
+    statusEl.textContent = 'Decodificando pixels das camadas...';
+    statusEl.classList.remove('hidden');
+  }
+  await new Promise((r) => setTimeout(r, 15));
+
+  const buf = await api.readfile(path);
+  const u8 = buf.buffer ? new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength) : buf;
+  const fullPsd = agPsd.readPsd(u8, { skipThumbnail: true, skipCompositeImageData: true });
+  syncLayerStates(entry.psd.children || [], fullPsd.children || []);
+  fullPsd.width = entry.psd.width;
+  fullPsd.height = entry.psd.height;
+  entry.psd = fullPsd;
+  entry.layersLoaded = true;
+  return entry;
+}
+
+const BLEND_MAP = {
+  'normal': 'source-over',
+  'pass through': 'source-over',
+  'multiply': 'multiply',
+  'screen': 'screen',
+  'overlay': 'overlay',
+  'darken': 'darken',
+  'lighten': 'lighten',
+  'color dodge': 'color-dodge',
+  'linear dodge': 'lighter',
+  'color burn': 'color-burn',
+  'hard light': 'hard-light',
+  'soft light': 'soft-light',
+  'difference': 'difference',
+  'exclusion': 'exclusion',
+  'hue': 'hue',
+  'saturation': 'saturation',
+  'color': 'color',
+  'luminosity': 'luminosity'
+};
+
+function composePsdLayersToCanvas(psd, soloLayerId = null) {
+  const out = document.createElement('canvas');
+  out.width = psd.width || 800;
+  out.height = psd.height || 600;
+  const ctx = out.getContext('2d');
+
+  function drawNodes(nodes) {
+    if (!Array.isArray(nodes)) return;
+    // Em ag-psd, nodes[0] é a camada mais ao fundo e nodes[length-1] é a camada do topo
+    for (let i = 0; i < nodes.length; i++) {
+      const layer = nodes[i];
+      if (soloLayerId !== null) {
+        if (layer._id === soloLayerId) {
+          drawSingleNode(ctx, layer, true);
+        } else if (Array.isArray(layer.children)) {
+          drawNodes(layer.children);
+        }
+        continue;
+      }
+
+      if (layer.hidden) continue;
+      drawSingleNode(ctx, layer, false);
+    }
+  }
+
+  function drawSingleNode(targetCtx, layer, ignoreHidden) {
+    const alpha = typeof layer.opacity === 'number' ? layer.opacity : 1;
+    const blend = BLEND_MAP[layer.blendMode] || 'source-over';
+
+    if (Array.isArray(layer.children)) {
+      const grpCanvas = document.createElement('canvas');
+      grpCanvas.width = out.width;
+      grpCanvas.height = out.height;
+      const gCtx = grpCanvas.getContext('2d');
+      for (let j = 0; j < layer.children.length; j++) {
+        const child = layer.children[j];
+        if (!ignoreHidden && child.hidden) continue;
+        drawSingleNode(gCtx, child, ignoreHidden);
+      }
+      targetCtx.save();
+      targetCtx.globalAlpha = alpha;
+      targetCtx.globalCompositeOperation = blend;
+      targetCtx.drawImage(grpCanvas, 0, 0);
+      targetCtx.restore();
+    } else if (layer.canvas) {
+      targetCtx.save();
+      targetCtx.globalAlpha = alpha;
+      targetCtx.globalCompositeOperation = blend;
+      targetCtx.drawImage(layer.canvas, layer.left || 0, layer.top || 0);
+      targetCtx.restore();
+    }
+  }
+
+  drawNodes(psd.children || []);
+  return out;
+}
+
+function isPsdInDefaultState(nodes) {
+  if (!Array.isArray(nodes)) return true;
+  for (const n of nodes) {
+    if (!!n.hidden !== !!n._origHidden) return false;
+    if (n.children && !isPsdInDefaultState(n.children)) return false;
+  }
+  return true;
+}
+
+async function refreshPsdPreviewCanvas() {
+  const item = state.selected;
+  if (!item || item.kind !== 'psd') return;
+  const entry = psdCache.get(item.path);
+  if (!entry) return;
+
+  const statusEl = $('layers-status');
+  const isDefault = state.soloLayerId === null && isPsdInDefaultState(entry.psd.children);
+
+  let targetCanvas;
+  if (isDefault && entry.compositeCanvas) {
+    targetCanvas = entry.compositeCanvas;
+    if (statusEl) statusEl.classList.add('hidden');
+  } else {
+    await ensurePsdLayersLoaded(item.path);
+    targetCanvas = composePsdLayersToCanvas(entry.psd, state.soloLayerId);
+    if (statusEl) {
+      if (state.soloLayerId !== null) {
+        statusEl.textContent = 'Modo Solo ativo — clique na camada novamente ou em "Original" para sair';
+        statusEl.classList.remove('hidden');
+      } else {
+        statusEl.textContent = 'Visualização personalizada de camadas';
+        statusEl.classList.remove('hidden');
+      }
+    }
+  }
+
+  entry.canvas = targetCanvas;
+  const stageCanvas = $('stage').querySelector('canvas.preview-media');
+  if (stageCanvas) {
+    stageCanvas.width = targetCanvas.width;
+    stageCanvas.height = targetCanvas.height;
+    const ctx = stageCanvas.getContext('2d');
+    ctx.clearRect(0, 0, stageCanvas.width, stageCanvas.height);
+    ctx.drawImage(targetCanvas, 0, 0);
+  }
+}
+
+async function exportLayerToPng(layer, psd) {
+  try {
+    const item = state.selected;
+    if (!item) return;
+    await ensurePsdLayersLoaded(item.path);
+    const updatedEntry = psdCache.get(item.path);
+    // Localiza a camada pelo _id na árvore recém-decodificada
+    function findById(nodes, id) {
+      for (const n of nodes || []) {
+        if (n._id === id) return n;
+        if (n.children) {
+          const f = findById(n.children, id);
+          if (f) return f;
+        }
+      }
+      return null;
+    }
+    const targetLayer = findById(updatedEntry.psd.children, layer._id) || layer;
+    let exportCanvas = null;
+
+    if (Array.isArray(targetLayer.children)) {
+      exportCanvas = composePsdLayersToCanvas(updatedEntry.psd, targetLayer._id);
+    } else if (targetLayer.canvas) {
+      exportCanvas = targetLayer.canvas;
+    }
+
+    if (!exportCanvas || exportCanvas.width === 0 || exportCanvas.height === 0) {
+      showError('Esta camada está vazia ou não possui pixels exportáveis.');
+      return;
+    }
+
+    const safeName = (targetLayer.name || 'camada').replace(/[\\/:*?"<>|]/g, '_');
+    const targetPath = await api.saveFileDialog(`${safeName}.png`);
+    if (!targetPath) return;
+
+    const dataUrl = exportCanvas.toDataURL('image/png');
+    const base64Data = dataUrl.replace(/^data:image\/png;base64,/, '');
+    await api.writefile(targetPath, base64Data);
+    if (state.dir && targetPath.toLowerCase().startsWith(state.dir.toLowerCase())) {
+      openDir(state.dir, false);
+    }
+  } catch (err) {
+    showError('Não foi possível exportar a camada: ' + (err.message || err));
+  }
+}
+
+function renderLayersPanel(entry) {
+  const badge = $('layers-badge');
+  const tree = $('layers-tree');
+  const statusEl = $('layers-status');
+  if (!tree) return;
+
+  if (!entry || !entry.psd || !Array.isArray(entry.psd.children) || entry.psd.children.length === 0) {
+    if (badge) badge.classList.add('hidden');
+    if (statusEl) statusEl.classList.add('hidden');
+    tree.innerHTML = `<div class="layers-empty">${entry?.isHugeFallback ? 'Arquivo PSB gigante (> 1.8 GB): usando pré-visualização rápida embutida' : 'Este arquivo PSD/PSB não possui camadas individuais (apenas imagem achatada)'}</div>`;
+    return;
+  }
+
+  if (badge) {
+    badge.textContent = String(entry.totalLayers || entry.psd.children.length);
+    badge.classList.remove('hidden');
+  }
+
+  tree.innerHTML = '';
+
+  function buildDomNodes(nodes, container) {
+    // Renderiza de cima para baixo (ordem do Photoshop: do último elemento ao primeiro)
+    for (let i = nodes.length - 1; i >= 0; i--) {
+      const layer = nodes[i];
+      const isGroup = Array.isArray(layer.children);
+      const isText = !!layer.text;
+      const isSolo = state.soloLayerId === layer._id;
+
+      const nodeWrap = document.createElement('div');
+      nodeWrap.className = 'layer-node';
+
+      const row = document.createElement('div');
+      row.className = 'layer-row' + (layer.hidden ? ' is-hidden' : '') + (isSolo ? ' is-solo' : '');
+
+      // Botão de expandir/recolher grupo
+      const foldBtn = document.createElement('button');
+      foldBtn.className = 'layer-fold-btn' + (isGroup ? '' : ' invisible');
+      foldBtn.textContent = layer._collapsed ? '▸' : '▾';
+      foldBtn.title = isGroup ? (layer._collapsed ? 'Expandir grupo' : 'Recolher grupo') : '';
+      if (isGroup) {
+        foldBtn.onclick = (e) => {
+          e.stopPropagation();
+          layer._collapsed = !layer._collapsed;
+          renderLayersPanel(entry);
+        };
+      }
+
+      // Botão de visibilidade (olho)
+      const eyeBtn = document.createElement('button');
+      eyeBtn.className = 'layer-eye-btn' + (layer.hidden ? ' off' : '');
+      eyeBtn.textContent = '👁';
+      eyeBtn.title = layer.hidden ? 'Mostrar camada' : 'Ocultar camada';
+      eyeBtn.onclick = async (e) => {
+        e.stopPropagation();
+        layer.hidden = !layer.hidden;
+        if (state.soloLayerId !== null) state.soloLayerId = null;
+        renderLayersPanel(entry);
+        await refreshPsdPreviewCanvas();
+      };
+
+      // Badge do tipo da camada (Pasta, Texto, Pixel)
+      const typeBadge = document.createElement('span');
+      typeBadge.className = 'layer-type-badge' + (isGroup ? ' is-group' : isText ? ' is-text' : '');
+      typeBadge.textContent = isGroup ? '📁' : isText ? 'T' : '🖼';
+
+      // Informações (Nome + modo de mesclagem + opacidade)
+      const info = document.createElement('div');
+      info.className = 'layer-info';
+      const pct = Math.round((typeof layer.opacity === 'number' ? layer.opacity : 1) * 100);
+      const blendLabel = (layer.blendMode || 'normal').toUpperCase();
+      info.innerHTML = `
+        <div class="layer-name" title="${esc(layer.name || 'Camada')}">${esc(layer.name || 'Camada sem nome')}</div>
+        <div class="layer-meta">${esc(blendLabel)} · ${pct}%</div>
+      `;
+
+      // Clique na linha inteira ativa/desativa o modo Solo (isolar camada)
+      row.onclick = async () => {
+        state.soloLayerId = state.soloLayerId === layer._id ? null : layer._id;
+        renderLayersPanel(entry);
+        await refreshPsdPreviewCanvas();
+      };
+      row.title = 'Clique para isolar esta camada (Modo Solo) · Clique no olho para mostrar/ocultar';
+
+      // Botão de exportar camada individual para PNG
+      const expBtn = document.createElement('button');
+      expBtn.className = 'layer-export-btn';
+      expBtn.textContent = '⬇';
+      expBtn.title = 'Exportar esta camada como PNG transparente';
+      expBtn.onclick = (e) => {
+        e.stopPropagation();
+        exportLayerToPng(layer, entry.psd);
+      };
+
+      row.appendChild(foldBtn);
+      row.appendChild(eyeBtn);
+      row.appendChild(typeBadge);
+      row.appendChild(info);
+      row.appendChild(expBtn);
+      nodeWrap.appendChild(row);
+
+      if (isGroup && layer.children.length > 0) {
+        const childrenContainer = document.createElement('div');
+        childrenContainer.className = 'layer-children' + (layer._collapsed ? ' collapsed' : '');
+        buildDomNodes(layer.children, childrenContainer);
+        nodeWrap.appendChild(childrenContainer);
+      }
+
+      container.appendChild(nodeWrap);
+    }
+  }
+
+  buildDomNodes(entry.psd.children, tree);
+}
+
+if ($('btn-layers-reset')) {
+  $('btn-layers-reset').onclick = async () => {
+    const item = state.selected;
+    if (!item || item.kind !== 'psd') return;
+    const entry = psdCache.get(item.path);
+    if (!entry) return;
+    state.soloLayerId = null;
+    function resetNodes(nodes) {
+      for (const n of nodes || []) {
+        n.hidden = !!n._origHidden;
+        if (n.children) resetNodes(n.children);
+      }
+    }
+    resetNodes(entry.psd.children);
+    renderLayersPanel(entry);
+    await refreshPsdPreviewCanvas();
+  };
+}
+
+if ($('btn-layers-all')) {
+  $('btn-layers-all').onclick = async () => {
+    const item = state.selected;
+    if (!item || item.kind !== 'psd') return;
+    const entry = psdCache.get(item.path);
+    if (!entry || !entry.psd?.children) return;
+    state.soloLayerId = null;
+    const anyVisible = entry.psd.children.some((n) => !n.hidden);
+    function setAll(nodes, hide) {
+      for (const n of nodes || []) {
+        n.hidden = hide;
+        if (n.children) setAll(n.children, hide);
+      }
+    }
+    setAll(entry.psd.children, anyVisible);
+    renderLayersPanel(entry);
+    await refreshPsdPreviewCanvas();
+  };
+}
+
+/* ---------- Decodificador Nativo de TIFF (Single & Multi-Page, CMYK, 8/16-bit) ---------- */
+const tiffCache = new Map(); // path -> { buffer, ifds }
+
+async function tiffToCanvas(path, pageIdx = 0) {
+  if (!window.UTIF) throw new Error('Biblioteca UTIF não carregada.');
+  let cached = tiffCache.get(path);
+  if (!cached) {
+    const buf = await api.readfile(path);
+    const ab = buf.buffer ? buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) : buf;
+    const ifds = window.UTIF.decode(ab);
+    if (!ifds || !ifds.length) throw new Error('Arquivo TIFF inválido ou vazio.');
+    cached = { ab, ifds };
+    tiffCache.set(path, cached);
+    if (tiffCache.size > 6) tiffCache.delete(tiffCache.keys().next().value);
+  }
+  const idx = Math.min(cached.ifds.length - 1, Math.max(0, pageIdx));
+  const ifd = cached.ifds[idx];
+  if (!ifd.data) {
+    window.UTIF.decodeImage(cached.ab, ifd);
+  }
+  const rgba = window.UTIF.toRGBA8(ifd);
+  const canvas = document.createElement('canvas');
+  canvas.width = ifd.width;
+  canvas.height = ifd.height;
+  const ctx = canvas.getContext('2d');
+  const imgData = new ImageData(new Uint8ClampedArray(rgba.buffer, rgba.byteOffset, rgba.byteLength), ifd.width, ifd.height);
+  ctx.putImageData(imgData, 0, 0);
+  return { canvas, width: ifd.width, height: ifd.height, totalPages: cached.ifds.length, page: idx + 1 };
+}
+
+async function renderTiffPage(pageNum) {
+  const item = state.selected;
+  if (!item || !state.tiffMultiPage) return;
+  const num = Math.min(state.tiffTotalPages, Math.max(1, pageNum));
+  state.tiffPage = num;
+  updatePdfControls();
+
+  const res = await tiffToCanvas(item.path, num - 1);
+  const stage = $('stage');
+  let canvas = stage.querySelector('.preview-media');
+  if (!canvas || canvas.tagName !== 'CANVAS') {
+    canvas = document.createElement('canvas');
+    canvas.className = 'preview-media';
+    stage.innerHTML = '';
+    stage.appendChild(canvas);
+  }
+  canvas.width = res.width;
+  canvas.height = res.height;
+  canvas.style.aspectRatio = `${res.width} / ${res.height}`;
+  canvas.getContext('2d').drawImage(res.canvas, 0, 0);
+  $('p-dim').textContent = `${res.width} × ${res.height} px (Pág ${num} de ${state.tiffTotalPages})`;
+  applyTransform();
 }
 
 function prefetch(item) {
   const i = state.viewables.findIndex((v) => v.path === item.path);
   [state.viewables[i + 1]].forEach((n) => {
-    if (n?.kind === 'psd') psdToCanvas(n.path).catch(() => {});
+    if (n?.kind === 'psd') psdToData(n.path, n.size).catch(() => {});
   });
 }
 
@@ -799,6 +1540,9 @@ function updatePdfControls() {
   if (state.selected?.kind === 'pdf' && state.pdfDoc) {
     tools.classList.remove('hidden');
     if (ind) ind.textContent = `${state.pdfPage} / ${state.pdfTotalPages}`;
+  } else if (state.tiffMultiPage && state.tiffTotalPages > 1) {
+    tools.classList.remove('hidden');
+    if (ind) ind.textContent = `${state.tiffPage} / ${state.tiffTotalPages}`;
   } else {
     tools.classList.add('hidden');
   }
@@ -836,13 +1580,21 @@ async function renderPdfPage(pageNum) {
 const btnPdfPrev = $('btn-pdf-prev');
 if (btnPdfPrev) {
   btnPdfPrev.onclick = () => {
-    if (state.pdfPage > 1) renderPdfPage(state.pdfPage - 1);
+    if (state.selected?.kind === 'pdf' && state.pdfPage > 1) {
+      renderPdfPage(state.pdfPage - 1);
+    } else if (state.tiffMultiPage && state.tiffPage > 1) {
+      renderTiffPage(state.tiffPage - 1);
+    }
   };
 }
 const btnPdfNext = $('btn-pdf-next');
 if (btnPdfNext) {
   btnPdfNext.onclick = () => {
-    if (state.pdfPage < state.pdfTotalPages) renderPdfPage(state.pdfPage + 1);
+    if (state.selected?.kind === 'pdf' && state.pdfPage < state.pdfTotalPages) {
+      renderPdfPage(state.pdfPage + 1);
+    } else if (state.tiffMultiPage && state.tiffPage < state.tiffTotalPages) {
+      renderTiffPage(state.tiffPage + 1);
+    }
   };
 }
 
@@ -850,6 +1602,9 @@ async function preview(item) {
   const token = ++state.token;
   const stage = $('stage');
   state.nav = { rot: 0, zoom: 1, x: 0, y: 0 };
+  state.tiffMultiPage = false;
+  state.tiffPage = 1;
+  state.tiffTotalPages = 1;
   const t0 = performance.now();
   let node;
 
@@ -861,7 +1616,23 @@ async function preview(item) {
   `;
 
   try {
-    if (item.kind === 'image') {
+    const fileExt = ext(item.name);
+    if (fileExt === 'tif' || fileExt === 'tiff') {
+      state.pdfDoc = null;
+      const tiffRes = await tiffToCanvas(item.path, 0);
+      state.tiffMultiPage = tiffRes.totalPages > 1;
+      state.tiffPage = 1;
+      state.tiffTotalPages = tiffRes.totalPages;
+      updatePdfControls();
+
+      node = document.createElement('canvas');
+      node.className = 'preview-media';
+      node.width = tiffRes.width;
+      node.height = tiffRes.height;
+      node.style.aspectRatio = `${tiffRes.width} / ${tiffRes.height}`;
+      node.getContext('2d').drawImage(tiffRes.canvas, 0, 0);
+      $('p-dim').textContent = `${tiffRes.width} × ${tiffRes.height}` + (tiffRes.totalPages > 1 ? ` (${tiffRes.totalPages} págs)` : '');
+    } else if (item.kind === 'image') {
       state.pdfDoc = null;
       updatePdfControls();
       node = new Image();
@@ -908,7 +1679,11 @@ async function preview(item) {
     } else {
       state.pdfDoc = null;
       updatePdfControls();
-      const src = await psdToCanvas(item.path);
+      const entry = await psdToData(item.path, item.size);
+      if (token === state.token) {
+        renderLayersPanel(entry);
+      }
+      const src = entry.canvas;
       node = document.createElement('canvas');
       node.className = 'preview-media';
       node.width = src.width;
@@ -916,7 +1691,8 @@ async function preview(item) {
       node.style.aspectRatio = `${src.width} / ${src.height}`;
       const ctx = node.getContext('2d');
       ctx.drawImage(src, 0, 0);
-      $('p-dim').textContent = `${src.width} × ${src.height}`;
+      const layersSuffix = entry.totalLayers ? ` · ${entry.totalLayers} camada${entry.totalLayers > 1 ? 's' : ''}` : '';
+      $('p-dim').textContent = `${src.width} × ${src.height}${layersSuffix}`;
     }
   } catch (e) {
     if (token !== state.token) return;
@@ -1065,17 +1841,31 @@ window.addEventListener('keydown', (e) => {
     if (state.selected?.kind === 'pdf' && state.pdfDoc && state.pdfPage < state.pdfTotalPages) {
       e.preventDefault();
       renderPdfPage(state.pdfPage + 1);
+    } else if (state.tiffMultiPage && state.tiffPage < state.tiffTotalPages) {
+      e.preventDefault();
+      renderTiffPage(state.tiffPage + 1);
     }
   }
   else if (e.key === 'PageUp' || (state.selected?.kind === 'pdf' && e.key === 'ArrowUp')) {
     if (state.selected?.kind === 'pdf' && state.pdfDoc && state.pdfPage > 1) {
       e.preventDefault();
       renderPdfPage(state.pdfPage - 1);
+    } else if (state.tiffMultiPage && state.tiffPage > 1) {
+      e.preventDefault();
+      renderTiffPage(state.tiffPage - 1);
     }
   }
-  else if (e.key.toLowerCase() === 'r') { 
+  else if (e.key.toLowerCase() === 'r' && !e.ctrlKey && !e.altKey) { 
     state.nav.rot = (state.nav.rot + 90) % 360; 
     applyTransform(); 
+  }
+  else if (e.key.toLowerCase() === 'l' && !e.ctrlKey && !e.altKey) {
+    e.preventDefault();
+    setRightTab(state.rightTab === 'layers' ? 'props' : 'layers');
+  }
+  else if (e.key.toLowerCase() === 'g' && !e.ctrlKey && !e.altKey) {
+    e.preventDefault();
+    applyViewMode(state.viewMode === 'gallery' ? (state.lastTextMode || 'columns') : 'gallery');
   }
   else if (e.key === '0') {
     fitToScreen();
@@ -1083,6 +1873,7 @@ window.addEventListener('keydown', (e) => {
   else if (e.key === 'Escape') { 
     state.token++; 
     state.pdfDoc = null;
+    state.tiffMultiPage = false;
     updatePdfControls();
     stage.innerHTML = '<div id="placeholder">Selecione um arquivo para pré-visualizar</div>'; 
   }
@@ -1150,8 +1941,12 @@ function hideContextMenu() {
 async function exportToPng(item) {
   try {
     let canvas = null;
+    const fileExt = ext(item.name);
     if (item.kind === 'psd') {
-      canvas = await psdToCanvas(item.path);
+      canvas = await psdToCanvas(item.path, item.size);
+    } else if (fileExt === 'tif' || fileExt === 'tiff') {
+      const tiffRes = await tiffToCanvas(item.path, state.tiffMultiPage ? (state.tiffPage - 1) : 0);
+      canvas = tiffRes.canvas;
     } else if (item.kind === 'image') {
       const img = new Image();
       img.src = fileUrl(item.path);
