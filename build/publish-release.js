@@ -96,7 +96,7 @@ Baixe o arquivo **PSD-VIEW-${version}-portable.exe** abaixo e execute diretament
   // Faz upload do binário para a release
   const uploadUrlRaw = release.upload_url.replace(/\{(\?.*)?\}/, '');
   const urlObj = new URL(uploadUrlRaw);
-  urlObj.searchParams.set('name', 'PSD-VIEW-0.1.1-portable.exe');
+  urlObj.searchParams.set('name', path.basename(exePath));
 
   console.log(`==> Enviando executável (${(exeStats.size / 1024 / 1024).toFixed(2)} MB)...`);
 
@@ -141,7 +141,7 @@ Baixe o arquivo **PSD-VIEW-${version}-portable.exe** abaixo e execute diretament
   });
 
   console.log('\n=======================================================');
-  console.log('🎉 Release 0.1.1 publicada com sucesso no GitHub!');
+  console.log(`🎉 Release ${version} publicada com sucesso no GitHub!`);
   console.log('Página da Release: ' + release.html_url);
   console.log('=======================================================');
 }
