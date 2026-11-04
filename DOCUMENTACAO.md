@@ -112,18 +112,23 @@ Card horizontal posicionado no topo, logo acima da janela de preview, exibindo a
 
 ### 3.1 Navegação de arquivos
 - Navegar por pastas e discos como em um explorer.
-- Filtrar por categoria (Todos, Imagens, PSD, Vídeos).
-- Busca por nome.
+- **Histórico de navegação:** botões de Voltar (`◀`), Avançar (`▶`) e Subir (`↑`), com suporte a atalhos de teclado (`Alt + ← / → / ↑`).
+- **Busca com escopo dinâmico:** pílula seletora para buscar na **Pasta atual** (recursivo em todas as subpastas) ou em **Todo o computador**.
+- Filtrar por categoria (Todos, Imagens, PSD, PDF, Vídeos).
+- **Abertura no programa padrão:** duplo clique em qualquer arquivo abre diretamente no aplicativo padrão do sistema (ex.: Adobe Photoshop para `.psd`).
 - Favoritar pastas.
 - **Acesso Rápido:** pinar/fixar até 3 arquivos usados com frequência no card lateral, com navegação imediata ao clicar e abertura no aplicativo padrão com duplo clique.
 
 ### 3.2 Visualização
-- **PSD:** exibe a imagem composta, sem abrir o Photoshop.
+- **PSD:** exibe a imagem composta, sem abrir o Photoshop, com opção de **Exportar como PNG...** no menu de contexto.
 - **PDF:** leitura e renderização nativa de páginas via PDF.js, com navegação de páginas (PgUp/PgDn).
-- **Imagens:** JPG, PNG, WebP, etc. com checkerboard para canais alfa.
+- **Imagens:** JPG, PNG, WebP, etc. com checkerboard para canais alfa e exportação direta.
 - **Vídeos:** reprodução/preview direto.
 - **Outros arquivos:** ícone e propriedades básicas.
-- Modo de tela cheia no visualizador.
+- **Zoom ancorado no cursor:** aproximação/afastamento proporcional centrado exatamente sob o ponteiro do mouse (estilo Figma/Photoshop).
+- **Pan com barra de espaço:** segurar `Espaço` ativa a ferramenta de mãozinha para arrastar.
+- **Feedback visual de carregamento:** spinner elegante durante o processamento de mídias pesadas.
+- Modo de tela cheia no visualizador (`F11`).
 
 ### 3.3 Propriedades e organização
 - Metadados do arquivo.
@@ -154,15 +159,27 @@ Card horizontal posicionado no topo, logo acima da janela de preview, exibindo a
 
 ## 5. Atalhos e controles
 
-Conforme a barra de dicas do visualizador:
+A aplicação conta com um modal interativo de atalhos acessível pela tecla `?` ou pelo botão **Atalhos** na barra de título.
 
-| Ação | Controle |
+| Ação | Atalho / Controle |
 |---|---|
-| Navegar entre arquivos | **Roda do mouse** / **← →** |
-| Zoom | **Ctrl + Roda do mouse** |
-| Mover imagem | **Arrastar** |
-| Girar | **R** |
-| Fechar visualizador | **Esc** |
+| **Navegação de pastas** | `Alt + ←` (Voltar) / `Alt + →` (Avançar) / `Alt + ↑` (Subir) |
+| **Buscar arquivos** | `Ctrl + F` |
+| **Atualizar lista** | `F5` |
+| **Abrir pasta / arquivo** | `Enter` ou `2x Clique` (abre no programa padrão) |
+| **Zoom no cursor** | `Ctrl + Roda do mouse` |
+| **Zoom in / out / fit** | `+` / `-` / `Backspace` |
+| **Mover imagem (Pan)** | `Espaço + Arrastar` ou clicar e arrastar |
+| **Girar 90°** | `R` |
+| **Tela cheia** | `F11` (ou clique duplo no palco) |
+| **Item anterior / próximo** | `←` / `→` (ou roda do mouse sem Ctrl) |
+| **Páginas do PDF** | `PgUp` / `PgDn` (ou `↑` / `↓` com PDF selecionado) |
+| **Classificação por estrelas** | Teclas `1` a `5` (`0` para limpar) |
+| **Renomear / Excluir** | `F2` / `Delete` |
+| **Copiar / Colar** | `Ctrl + C` / `Ctrl + V` |
+| **Propriedades** | `Alt + Enter` |
+| **Ajuda de atalhos** | `?` |
+| **Fechar modais / tela cheia** | `Esc` |
 
 ---
 

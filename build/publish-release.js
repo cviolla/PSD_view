@@ -10,54 +10,53 @@ async function main() {
   if (!tokenLine) throw new Error('Não foi possível obter o token do GitHub.');
   const token = tokenLine.replace('password=', '').trim();
 
-  const exePath = path.join(__dirname, '..', 'dist', 'PSD-VIEW-0.1.1-portable.exe');
+  const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
+  const version = pkg.version;
+  const exePath = path.join(__dirname, '..', 'dist', `PSD-VIEW-${version}-portable.exe`);
   if (!fs.existsSync(exePath)) {
     throw new Error('Arquivo não encontrado: ' + exePath);
   }
   const exeStats = fs.statSync(exePath);
   console.log(`==> Executável encontrado: ${exePath} (${(exeStats.size / 1024 / 1024).toFixed(2)} MB)`);
 
-  const bodyText = `## 🚀 O que há de novo na versão 0.1.1
+  const bodyText = `## 🚀 O que há de novo na versão ${version}
 
-### 📌 Card de Acesso Rápido (Arquivos Fixados)
-- **Área dedicada no painel direito**: novo card visual posicionado no rodapé da barra lateral de propriedades para armazenar até 3 arquivos favoritos de acesso frequente.
-- **Identificação visual completa**:
-  - Exibe o ícone oficial por formato (\`.psd\`, imagens, vídeos, PDFs e documentos).
-  - Nome do arquivo com truncamento (*ellipsis*) e caminho/pasta de origem resumido.
-  - Contador dinâmico no cabeçalho indicando slots em uso (\`0/3\`, \`1/3\`, \`2/3\`, \`3/3\`).
-  - Destaque com contorno amarelo suave (\`#e4ff00\`) quando o item fixado for o atualmente selecionado.
-  - Botão de exclusão rápida (\`✕\`) exibido ao passar o mouse.
-  - Estado vazio elegante quando nenhum arquivo estiver fixado.
-- **Formas de Fixar e Desfixar**:
-  - **Botão de Ação**: botão no painel de propriedades (*"Fixar no Acesso Rápido"* / *"Arquivo fixado (remover)"*) com ícone oficial de alfinete (\`Pin.png\`).
-  - **Menu de Contexto**: clique com o botão direito em qualquer arquivo da lista para fixar ou desfixar diretamente.
-- **Abertura Rápida**:
-  - **Clique simples**: navega automaticamente até a pasta de origem, seleciona o item na lista e renderiza seu preview e metadados na hora.
-  - **Duplo clique**: abre o arquivo diretamente no programa padrão do Windows (ex.: Adobe Photoshop).
-- **Regras de Negócio e Sincronização**:
-  - Limite estrito de 3 arquivos com aviso amigável.
-  - Sincronização automática ao renomear ou excluir arquivos pelo app.
-  - Persistência total entre sessões via \`localStorage\`.
+### 🔍 Busca com Escopo Dinâmico (Pasta Atual vs. Todo o PC)
+- **Seletor de Escopo em Pílula (\`[Pasta] [PC]\`)**: integrado na barra de busca lateral.
+- **Busca na Pasta Atual**: varre recursivamente a pasta aberta e todas as suas subpastas.
+- **Busca em Todo o PC**: busca global em todos os discos e pastas do sistema.
 
----
+### 🖱️ Abertura Rápida com Duplo Clique
+- **Aplicativo Padrão do Windows**: clique duplo em qualquer arquivo (ex.: \`.psd\`) abre imediatamente no programa padrão (como Adobe Photoshop). Pastas continuam navegando normalmente.
 
-### 🪟 Controles da Janela Unificados e Harmonizados
-- **Botão Minimizar Clássico**: retorno do ícone circular oficial com traço negativo (\`MacOS-Minimize.png\`).
-- **Botão Maximizar / Restaurar Unificado**:
-  - O botão \`btn-max\` agora detecta automaticamente o estado da janela (inclusive via Windows Snap ou clique duplo na barra).
-  - Em tamanho normal: exibe \`Decompress.png\` (setas divergentes ↗↙) para maximizar.
-  - Quando maximizada: alterna dinamicamente para \`minimize 2.png\` (setas convergentes ↘↖) para restaurar o tamanho.
+### 🧭 Histórico de Navegação de Pastas (Voltar / Avançar)
+- Botões \`◀\` e \`▶\` integrados à barra de arquivos com atalhos de teclado \`Alt + ←\` e \`Alt + →\`.
+
+### 🎯 Visualizador: Zoom Ancorado no Cursor e Pan com Espaço
+- **Zoom Focal**: aproximação/afastamento proporcional mantendo exatamente o ponto sob o cursor do mouse (estilo Photoshop/Figma).
+- **Pan com Barra de Espaço**: segurar \`Espaço\` ativa a mãozinha para arrastar o palco.
+- **Feedback Visual**: spinner de carregamento ao abrir PSDs, PDFs e mídias pesadas.
+
+### ⌨️ Central de Atalhos de Teclado (?)
+- Novo modal de atalhos acessível por \`?\` ou botão na barra de título.
+- Novos atalhos: \`F11\` (Tela Cheia), \`Ctrl+F\` (Busca), \`1\` a \`5\` (Estrelas), \`R\` (Girar 90°), \`+\` / \`-\` / \`Backspace\` (Zoom).
+
+### 🖼️ Exportação Rápida para PNG
+- Menu de contexto com opção *"Exportar como PNG..."* para PSDs e imagens.
+
+### ⚡ Performance e Concorrência de I/O
+- Divisão em lotes balanceados na leitura de diretórios (\`fs:readdir\`), evitando gargalos no Windows.
 
 ---
 
 ### 📦 Como executar
-Baixe o arquivo **PSD-VIEW-0.1.1-portable.exe** abaixo e execute diretamente — não requer instalação.`;
+Baixe o arquivo **PSD-VIEW-${version}-portable.exe** abaixo e execute diretamente — não requer instalação.`;
 
-  console.log('==> Criando Release v0.1.1 na API do GitHub...');
+  console.log(`==> Criando Release v${version} na API do GitHub...`);
   const releasePayload = JSON.stringify({
-    tag_name: 'v0.1.1',
+    tag_name: `v${version}`,
     target_commitish: 'main',
-    name: 'PSD VIEW v0.1.1 — Acesso Rápido e Melhorias nos Controles de Janela',
+    name: `PSD VIEW v${version} — Busca por Pasta, Zoom no Cursor, Histórico e Atalhos`,
     body: bodyText,
     draft: false,
     prerelease: false

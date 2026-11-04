@@ -4,6 +4,47 @@ Todas as modificações notáveis neste projeto serão documentadas neste arquiv
 
 ---
 
+## [0.1.2] — 04/11/2026
+
+### 🔍 Busca com Escopo Dinâmico (Pasta Atual vs. Todo o PC)
+- **Seletor de Escopo em Pílula (`[Pasta] [PC]`)**: integrado elegantemente dentro da barra de busca lateral.
+- **Busca na Pasta Atual (Padrão)**: varre recursivamente a pasta aberta e todas as suas subpastas com alta performance.
+- **Busca em Todo o PC**: alternável com um clique, cobrindo todos os discos e pastas do usuário.
+- **Feedback Dinâmico**: placeholders e status contextuais (`"Buscar nesta pasta..."` / `"Buscar em todo o computador..."`).
+
+### 🖱️ Abertura Rápida com Duplo Clique
+- **Integração com Aplicativo Padrão do Sistema**: duplo clique sobre qualquer arquivo (como `.psd`) agora abre diretamente no programa padrão do Windows (ex.: Adobe Photoshop para `.psd`, fotos para `.png`).
+- O duplo clique sobre pastas continua abrindo a navegação na pasta normalmente.
+
+### 🧭 Histórico de Navegação de Pastas (Voltar e Avançar)
+- **Botões dedicados na barra de arquivos**: novos botões `◀` (Voltar) e `▶` (Avançar) ao lado do botão `↑` (Subir).
+- **Atalhos nativos**: navegação rápida com `Alt + ←` (Voltar), `Alt + →` (Avançar) e `Alt + ↑` (Subir nível).
+- **Gerenciamento Inteligente de Histórico**: estado habilitado/desabilitado automático conforme a pilha de navegação.
+
+### 🎯 Visualizador: Zoom Ancorado no Cursor e Pan com Espaço
+- **Zoom Focal no Cursor (estilo Photoshop/Figma)**: ao usar `Ctrl + Roda do mouse`, o ponto da imagem sob o cursor é mantido perfeitamente no mesmo lugar sob qualquer nível de aproximação.
+- **Pan com Barra de Espaço**: segurar a tecla `Espaço` ativa a ferramenta de mãozinha (`cursor: grab / grabbing`), permitindo arrastar livremente o palco.
+- **Feedback Visual de Carregamento**: spinner elegante e aviso de carregamento ao abrir PSDs, PDFs e mídias pesadas.
+
+### ⌨️ Central de Atalhos de Teclado e Produtividade
+- **Modal de Atalhos Interativo (`?`)**: novo modal com design Gilroy e badges `<kbd>`, acessível pela tecla `?` ou pelo botão *"Atalhos"* na barra de título.
+- **Novos Atalhos Globais**:
+  - `F11`: Alternar modo tela cheia (*Full View*).
+  - `Ctrl + F`: Focar instantaneamente no campo de busca com seleção de texto.
+  - `1` a `5`: Atribuir classificação por estrelas diretamente pelo teclado (`0` para limpar).
+  - `+` / `-` / `Backspace`: Zoom in, out e redefinir enquadramento à tela.
+  - `R`: Girar 90 graus.
+  - `Esc`: Fechar modais (Atalhos, Sobre), menu de contexto e tela cheia de forma segura.
+
+### 🖼️ Exportação Rápida para PNG
+- **Menu de Contexto**: nova opção *"Exportar como PNG..."* ao clicar com botão direito em qualquer arquivo `.psd` ou imagem, gerando o arquivo PNG diretamente sem necessidade de abrir o Photoshop.
+
+### ⚡ Performance e Concorrência de I/O
+- **Leitura Otimizada de Diretórios (`fs:readdir`)**: divisão em lotes concorrentes balanceados (48 itens), eliminando gargalos de I/O na libuv do Windows ao abrir pastas com milhares de arquivos.
+- **Ajuste Ergonômico de Escala**: redução de 10% nos ícones e textos do card de filtros para harmonização visual.
+
+---
+
 ## [0.1.1] — 23/10/2026
 
 ### 📌 Card de Acesso Rápido (Arquivos Fixados)

@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { execFile } = require('child_process');
@@ -72,21 +72,44 @@ ipcMain.handle('fs:home', () => ({
 
 ipcMain.handle('fs:readdir', async (_e, dir) => {
   const entries = await fs.promises.readdir(dir, { withFileTypes: true });
-  const out = await Promise.all(entries.map(async (d) => {
-    const full = path.join(dir, d.name);
-    try {
-      const st = await fs.promises.stat(full);
-      return { name: d.name, path: full, isDir: st.isDirectory(), size: st.size, mtime: st.mtimeMs };
-    } catch {
-      return null; // sem permissão / link quebrado
+  const out = [];
+  const BATCH_SIZE = 48;
+  for (let i = 0; i < entries.length; i += BATCH_SIZE) {
+    const chunk = entries.slice(i, i + BATCH_SIZE);
+    const results = await Promise.all(chunk.map(async (d) => {
+      const full = path.join(dir, d.name);
+      try {
+        const st = await fs.promises.stat(full);
+        return { name: d.name, path: full, isDir: st.isDirectory(), size: st.size, mtime: st.mtimeMs };
+      } catch {
+        return null; // sem permissão / link quebrado
+      }
+    }));
+    for (const r of results) {
+      if (r) out.push(r);
     }
-  }));
-  return out.filter(Boolean);
+  }
+  return out;
 });
 
 ipcMain.handle('fs:readfile', async (_e, file) => {
   const buf = await fs.promises.readFile(file);
   return buf; // Uint8Array no renderer
+});
+
+ipcMain.handle('fs:writefile', async (_e, filePath, base64Data) => {
+  const buffer = Buffer.from(base64Data, 'base64');
+  await fs.promises.writeFile(filePath, buffer);
+  return true;
+});
+
+ipcMain.handle('fs:saveFileDialog', async (_e, defaultName) => {
+  const res = await dialog.showSaveDialog(win, {
+    title: 'Exportar imagem como PNG',
+    defaultPath: defaultName,
+    filters: [{ name: 'Imagem PNG (*.png)', extensions: ['png'] }]
+  });
+  return res.canceled ? null : res.filePath;
 });
 
 ipcMain.handle('fs:stat', async (_e, file) => {
@@ -221,7 +244,7 @@ const SEARCH_MAX = 1000;
 
 ipcMain.on('search:cancel', () => { currentSearchId++; });
 
-ipcMain.handle('search:start', async (e, query) => {
+ipcMain.handle('search:start', async (e, query, searchDir = null) => {
   const id = ++currentSearchId;
   const q = String(query || '').trim().toLowerCase();
   const sender = e.sender;
@@ -230,10 +253,17 @@ ipcMain.handle('search:start', async (e, query) => {
 
   (async () => {
     const roots = [];
-    for (const k of ['desktop', 'documents', 'pictures', 'downloads', 'videos']) {
-      try { roots.push(app.getPath(k)); } catch {}
+    if (searchDir && typeof searchDir === 'string') {
+      try {
+        if (fs.existsSync(searchDir)) roots.push(searchDir);
+      } catch {}
     }
-    roots.push(...(await listDrives()).map((d) => d.path));
+    if (!roots.length) {
+      for (const k of ['desktop', 'documents', 'pictures', 'downloads', 'videos']) {
+        try { roots.push(app.getPath(k)); } catch {}
+      }
+      roots.push(...(await listDrives()).map((d) => d.path));
+    }
     const visited = new Set();
     let batch = [];
     let total = 0;

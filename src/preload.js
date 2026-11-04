@@ -4,6 +4,8 @@ contextBridge.exposeInMainWorld('api', {
   home: () => ipcRenderer.invoke('fs:home'),
   readdir: (d) => ipcRenderer.invoke('fs:readdir', d),
   readfile: (f) => ipcRenderer.invoke('fs:readfile', f),
+  writefile: (f, d) => ipcRenderer.invoke('fs:writefile', f, d),
+  saveFileDialog: (name) => ipcRenderer.invoke('fs:saveFileDialog', name),
   stat: (f) => ipcRenderer.invoke('fs:stat', f),
   drives: () => ipcRenderer.invoke('fs:drives'),
   reveal: (f) => ipcRenderer.send('fs:reveal', f),
@@ -21,7 +23,7 @@ contextBridge.exposeInMainWorld('api', {
   close: () => ipcRenderer.send('win:close'),
   setFullscreen: (on) => ipcRenderer.send('win:fullscreen', on),
   onFullscreenChange: (cb) => ipcRenderer.on('win:fullscreen-changed', (_e, on) => cb(on)),
-  searchStart: (q) => ipcRenderer.invoke('search:start', q),
+  searchStart: (q, dir) => ipcRenderer.invoke('search:start', q, dir),
   searchCancel: () => ipcRenderer.send('search:cancel'),
   onSearchBatch: (cb) => ipcRenderer.on('search:batch', (_e, data) => cb(data))
 });

@@ -4,3 +4,4 @@ dist
 build/cert.pfx
 build/cert.password
 *.pfx
+.agents/

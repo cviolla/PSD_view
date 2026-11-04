@@ -35,6 +35,13 @@ const state = {
   items: [], 
   filter: 'all', 
   query: '', 
+  searchScope: 'folder',
+  searchActive: false,
+  searchItems: [],
+  searchDone: true,
+  searchId: 0,
+  history: [],
+  historyIndex: -1,
   selected: null, 
   viewables: [], 
   rating: store.get('ratings', {}), 
@@ -421,12 +428,44 @@ function updateActiveDrive() {
   });
 }
 
-/* ---------- Lista de Arquivos ---------- */
-async function openDir(dir) {
+/* ---------- Lista de Arquivos e Histórico de Navegação ---------- */
+function updateHistoryButtons() {
+  const btnBack = $('btn-back');
+  const btnForward = $('btn-forward');
+  if (btnBack) btnBack.disabled = state.historyIndex <= 0;
+  if (btnForward) btnForward.disabled = state.historyIndex >= state.history.length - 1;
+}
+
+function goBackDir() {
+  if (state.historyIndex > 0) {
+    state.historyIndex--;
+    openDir(state.history[state.historyIndex], false);
+  }
+}
+
+function goForwardDir() {
+  if (state.historyIndex < state.history.length - 1) {
+    state.historyIndex++;
+    openDir(state.history[state.historyIndex], false);
+  }
+}
+
+$('btn-back').onclick = goBackDir;
+$('btn-forward').onclick = goForwardDir;
+
+async function openDir(dir, recordHistory = true) {
   try {
     const items = await api.readdir(dir);
-    stopGlobalSearch(true);
+    stopSearch(true);
     state.dir = dir;
+    if (recordHistory) {
+      if (state.historyIndex < state.history.length - 1) {
+        state.history = state.history.slice(0, state.historyIndex + 1);
+      }
+      state.history.push(dir);
+      state.historyIndex = state.history.length - 1;
+    }
+    updateHistoryButtons();
     state.items = items.map((i) => ({ ...i, kind: kind(i) }))
       .sort((a, b) => (b.isDir - a.isDir) || a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
     $('crumb').textContent = dir;
@@ -440,30 +479,31 @@ async function openDir(dir) {
 
 function renderList() {
   const q = state.query.toLowerCase();
-  const source = state.globalActive ? state.globalItems : state.items;
+  const source = state.searchActive ? state.searchItems : state.items;
   const list = source.filter((i) => {
-    if (!state.globalActive && q && !i.name.toLowerCase().includes(q)) return false;
+    if (!state.searchActive && q && !i.name.toLowerCase().includes(q)) return false;
     if (state.filter === 'all') return true;
     return i.isDir || i.kind === state.filter;
   });
   state.viewables = list.filter((i) => ['image', 'psd', 'video', 'pdf'].includes(i.kind));
-  $('count').textContent = list.length + ' itens' + (state.globalActive ? (state.globalDone ? ' (busca global)' : ' — buscando…') : '');
+  const scopeSuffix = state.searchScope === 'folder' ? ' (nesta pasta)' : ' (busca global)';
+  $('count').textContent = list.length + ' itens' + (state.searchActive ? (state.searchDone ? scopeSuffix : ' — buscando…') : '');
   const frag = document.createDocumentFragment();
   
   const LIMIT = 3000;
   list.slice(0, LIMIT).forEach((i) => {
     const el = document.createElement('div');
     el.className = 'item' + (state.selected?.path === i.path ? ' sel' : '');
-    el.title = state.globalActive ? i.path : i.name; 
+    el.title = state.searchActive ? i.path : i.name; 
     el.dataset.path = i.path;
     
     // Ícone oficial baseado no tipo de arquivo
     const iconSrc = iconPaths[i.kind] || iconPaths.other;
-    const sub = state.globalActive ? `<em class="item-path">${esc(i.path.slice(0, Math.max(0, i.path.length - i.name.length - 1)))}</em>` : '';
+    const sub = state.searchActive ? `<em class="item-path">${esc(i.path.slice(0, Math.max(0, i.path.length - i.name.length - 1)))}</em>` : '';
     el.innerHTML = `<img src="${iconSrc}" class="item-file-icon" alt="" /><span>${esc(i.name)}${sub}</span>`;
     
     el.onclick = () => select(i, el);
-    el.ondblclick = () => (i.isDir ? openDir(i.path) : select(i, el));
+    el.ondblclick = () => (i.isDir ? openDir(i.path) : api.open(i.path));
     el.oncontextmenu = (ev) => {
       ev.preventDefault();
       ev.stopPropagation();
@@ -483,15 +523,15 @@ $('btn-up').onclick = () => {
   openDir(/^[A-Za-z]:$/.test(up) ? up + '\\' : up || state.dir);
 };
 
-/* ---------- Busca global (todos os discos) ---------- */
+/* ---------- Busca (Pasta atual recursiva ou Global em todo o PC) ---------- */
 let searchTimer = null;
 
-function stopGlobalSearch(clearInput) {
+function stopSearch(clearInput) {
   clearTimeout(searchTimer);
-  if (state.globalActive) api.searchCancel();
-  state.globalActive = false;
-  state.globalItems = [];
-  state.globalDone = true;
+  if (state.searchActive) api.searchCancel();
+  state.searchActive = false;
+  state.searchItems = [];
+  state.searchDone = true;
   if (clearInput) {
     state.query = '';
     $('search').value = '';
@@ -499,33 +539,67 @@ function stopGlobalSearch(clearInput) {
 }
 
 api.onSearchBatch((d) => {
-  if (!state.globalActive || (state.searchId && d.id < state.searchId)) return;
-  state.globalItems.push(...d.items.map((i) => ({ ...i, kind: kind(i) })));
-  if (d.done) state.globalDone = true;
+  if (!state.searchActive || (state.searchId && d.id < state.searchId)) return;
+  state.searchItems.push(...d.items.map((i) => ({ ...i, kind: kind(i) })));
+  if (d.done) state.searchDone = true;
   renderList();
-  if (d.done) $('crumb').textContent = 'Resultados para "' + state.query + '" em todo o computador' + (d.truncated ? ' (primeiros 1000)' : '');
+  if (d.done) {
+    const isFolder = state.searchScope === 'folder' && state.dir;
+    const targetLabel = isFolder ? ('na pasta "' + state.dir + '"') : 'em todo o computador';
+    $('crumb').textContent = 'Resultados para "' + state.query + '" ' + targetLabel + (d.truncated ? ' (primeiros 1000)' : '');
+  }
 });
 
-$('search').oninput = (e) => { 
-  state.query = e.target.value; 
+function triggerSearch() {
   clearTimeout(searchTimer);
   const q = state.query.trim();
   if (q.length < 2) {
-    const wasGlobal = state.globalActive;
-    stopGlobalSearch(false);
-    if (wasGlobal && state.dir) $('crumb').textContent = state.dir;
+    const wasActive = state.searchActive;
+    stopSearch(false);
+    if (wasActive && state.dir) $('crumb').textContent = state.dir;
     renderList();
     return;
   }
   searchTimer = setTimeout(async () => {
-    state.globalActive = true;
-    state.globalItems = [];
-    state.globalDone = false;
-    $('crumb').textContent = 'Buscando "' + q + '" em todo o computador…';
+    state.searchActive = true;
+    state.searchItems = [];
+    state.searchDone = false;
+    const isFolder = state.searchScope === 'folder' && state.dir;
+    const targetLabel = isFolder ? ('em ' + state.dir) : 'em todo o computador';
+    $('crumb').textContent = 'Buscando "' + q + '" ' + targetLabel + '…';
     renderList();
-    state.searchId = await api.searchStart(q);
-  }, 300);
+    state.searchId = await api.searchStart(q, isFolder ? state.dir : null);
+  }, 250);
+}
+
+$('search').oninput = (e) => { 
+  state.query = e.target.value; 
+  triggerSearch();
 };
+
+const scopeButtons = document.querySelectorAll('#search-scope .scope-btn');
+function setSearchScope(scope) {
+  state.searchScope = scope;
+  scopeButtons.forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.scope === scope);
+  });
+  const input = $('search');
+  if (scope === 'folder') {
+    input.placeholder = 'Buscar nesta pasta...';
+  } else {
+    input.placeholder = 'Buscar em todo o computador...';
+  }
+  if (state.query.trim().length >= 2) {
+    triggerSearch();
+  }
+}
+
+scopeButtons.forEach((btn) => {
+  btn.onclick = (e) => {
+    e.stopPropagation();
+    setSearchScope(btn.dataset.scope);
+  };
+});
 
 document.querySelectorAll('#filters button').forEach((b) => b.onclick = () => {
   document.querySelectorAll('#filters button').forEach((x) => x.classList.remove('active'));
@@ -635,15 +709,34 @@ function fitToScreen() {
   applyTransform();
 }
 
+function zoomAtPoint(factor, clientX, clientY) {
+  const stage = $('stage');
+  const media = stage.querySelector('.preview-media');
+  if (!media) return;
+  const oldZoom = state.nav.zoom;
+  const newZoom = Math.min(25, Math.max(0.08, oldZoom * factor));
+  if (oldZoom === newZoom) return;
+
+  const rect = stage.getBoundingClientRect();
+  const cX = typeof clientX === 'number' ? (clientX - (rect.left + rect.width / 2)) : 0;
+  const cY = typeof clientY === 'number' ? (clientY - (rect.top + rect.height / 2)) : 0;
+
+  const imgX = (cX - state.nav.x) / oldZoom;
+  const imgY = (cY - state.nav.y) / oldZoom;
+
+  state.nav.x = cX - imgX * newZoom;
+  state.nav.y = cY - imgY * newZoom;
+  state.nav.zoom = newZoom;
+  applyTransform();
+}
+
+function zoomByFactor(factor) {
+  zoomAtPoint(factor);
+}
+
 $('btn-fit').onclick = fitToScreen;
-$('btn-zoom-in').onclick = () => {
-  state.nav.zoom = Math.min(20, state.nav.zoom * 1.25);
-  applyTransform();
-};
-$('btn-zoom-out').onclick = () => {
-  state.nav.zoom = Math.max(0.1, state.nav.zoom * 0.8);
-  applyTransform();
-};
+$('btn-zoom-in').onclick = () => zoomByFactor(1.25);
+$('btn-zoom-out').onclick = () => zoomByFactor(0.8);
 $('btn-rotate').onclick = () => {
   state.nav.rot = (state.nav.rot + 90) % 360;
   applyTransform();
@@ -759,6 +852,14 @@ async function preview(item) {
   state.nav = { rot: 0, zoom: 1, x: 0, y: 0 };
   const t0 = performance.now();
   let node;
+
+  stage.innerHTML = `
+    <div class="preview-loading">
+      <div class="preview-spinner"></div>
+      <span>Carregando preview...</span>
+    </div>
+  `;
+
   try {
     if (item.kind === 'image') {
       state.pdfDoc = null;
@@ -867,12 +968,27 @@ const stage = $('stage');
 stage.addEventListener('wheel', (e) => {
   e.preventDefault();
   if (e.ctrlKey) { 
-    state.nav.zoom = Math.min(20, Math.max(0.1, state.nav.zoom * (e.deltaY < 0 ? 1.15 : 0.85))); 
-    applyTransform(); 
+    const factor = e.deltaY < 0 ? 1.15 : 0.85;
+    zoomAtPoint(factor, e.clientX, e.clientY);
   } else {
     step(e.deltaY > 0 ? 1 : -1);
   }
 }, { passive: false });
+
+let spacePan = false;
+window.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || !$('dialog').classList.contains('hidden') || !$('shortcuts-modal').classList.contains('hidden')) return;
+  if (e.code === 'Space' && !spacePan) {
+    spacePan = true;
+    stage.classList.add('space-pan');
+  }
+});
+window.addEventListener('keyup', (e) => {
+  if (e.code === 'Space') {
+    spacePan = false;
+    stage.classList.remove('space-pan');
+  }
+});
 
 let drag = null;
 stage.addEventListener('mousedown', (e) => {
@@ -943,8 +1059,8 @@ stage.addEventListener('contextmenu', (e) => {
 window.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT') return;
   if (e.key === 'Escape' && state.fullview) { setFullView(false); return; }
-  if (e.key === 'ArrowRight') step(1);
-  else if (e.key === 'ArrowLeft') step(-1);
+  if (e.key === 'ArrowRight' && !e.altKey) step(1);
+  else if (e.key === 'ArrowLeft' && !e.altKey) step(-1);
   else if (e.key === 'PageDown' || (state.selected?.kind === 'pdf' && e.key === 'ArrowDown')) {
     if (state.selected?.kind === 'pdf' && state.pdfDoc && state.pdfPage < state.pdfTotalPages) {
       e.preventDefault();
@@ -1031,11 +1147,49 @@ function hideContextMenu() {
   ctxMenu.innerHTML = '';
 }
 
+async function exportToPng(item) {
+  try {
+    let canvas = null;
+    if (item.kind === 'psd') {
+      canvas = await psdToCanvas(item.path);
+    } else if (item.kind === 'image') {
+      const img = new Image();
+      img.src = fileUrl(item.path);
+      await img.decode();
+      canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+    }
+    if (!canvas) {
+      showError('Formato não suporta exportação direta como imagem.');
+      return;
+    }
+    const defaultName = item.name.replace(/\.[^/.]+$/, '') + '.png';
+    const targetPath = await api.saveFileDialog(defaultName);
+    if (!targetPath) return;
+
+    const dataUrl = canvas.toDataURL('image/png');
+    const base64Data = dataUrl.replace(/^data:image\/png;base64,/, '');
+    await api.writefile(targetPath, base64Data);
+    
+    if (state.dir && targetPath.toLowerCase().startsWith(state.dir.toLowerCase())) {
+      openDir(state.dir, false);
+    }
+  } catch (err) {
+    showError('Falha ao exportar imagem: ' + (err.message || err));
+  }
+}
+
 function showContextMenu(x, y, item, custom) {
   const entries = custom ? custom : item
     ? [
         { label: 'Abrir', hint: 'Enter', run: () => (item.isDir ? openDir(item.path) : api.open(item.path)) },
         { label: 'Abrir com...', disabled: item.isDir, run: () => api.openWith(item.path) },
+        ...(!item.isDir && ['psd', 'image'].includes(item.kind) ? [
+          { label: 'Exportar como PNG...', run: () => exportToPng(item) }
+        ] : []),
         ...(!item.isDir ? [
           { label: isPinned(item.path) ? 'Desfixar do Acesso Rápido' : 'Fixar no Acesso Rápido', run: () => togglePin(item) }
         ] : []),
@@ -1176,16 +1330,98 @@ window.addEventListener('blur', hideContextMenu);
 window.addEventListener('resize', hideContextMenu);
 $('file-list').addEventListener('scroll', hideContextMenu);
 
-// Atalhos: Ctrl+C / Ctrl+V / F2 / Delete / F5 / Alt+Enter / Enter
+/* ---------- Modal de Atalhos de Teclado ---------- */
+function toggleShortcutsModal() {
+  const m = $('shortcuts-modal');
+  m.classList.toggle('hidden');
+}
+
+function hideShortcutsModal() {
+  $('shortcuts-modal').classList.add('hidden');
+}
+
+const btnShortcuts = $('btn-shortcuts');
+if (btnShortcuts) btnShortcuts.onclick = toggleShortcutsModal;
+
+const btnShortcutsClose = $('btn-shortcuts-close');
+if (btnShortcutsClose) btnShortcutsClose.onclick = hideShortcutsModal;
+
+$('shortcuts-modal').onclick = (e) => {
+  if (e.target === $('shortcuts-modal')) hideShortcutsModal();
+};
+
+// Atalhos globais expandidos
 window.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT' || !$('dialog').classList.contains('hidden')) return;
   const sel = state.selected;
-  if (e.key === 'Escape') hideContextMenu();
+
+  if (e.key === 'Escape') {
+    if (!$('shortcuts-modal').classList.contains('hidden')) {
+      hideShortcutsModal();
+    } else if (!$('about').classList.contains('hidden')) {
+      $('about').classList.add('hidden');
+    } else if (!$('ctx-menu').classList.contains('hidden')) {
+      hideContextMenu();
+    } else if (state.fullview) {
+      setFullView(false);
+    }
+  }
+  else if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+    e.preventDefault();
+    toggleShortcutsModal();
+  }
+  else if (e.key === 'F11') {
+    e.preventDefault();
+    setFullView(!state.fullview);
+  }
+  else if (e.ctrlKey && e.key.toLowerCase() === 'f') {
+    e.preventDefault();
+    const sInput = $('search');
+    sInput.focus();
+    sInput.select();
+  }
+  else if (e.altKey && e.key === 'ArrowLeft') {
+    e.preventDefault();
+    goBackDir();
+  }
+  else if (e.altKey && e.key === 'ArrowRight') {
+    e.preventDefault();
+    goForwardDir();
+  }
+  else if (e.altKey && e.key === 'ArrowUp') {
+    e.preventDefault();
+    $('btn-up').click();
+  }
+  else if (['1', '2', '3', '4', '5'].includes(e.key) && sel && !e.ctrlKey && !e.altKey) {
+    e.preventDefault();
+    const stars = Number(e.key);
+    state.rating[sel.path] = state.rating[sel.path] === stars ? 0 : stars;
+    store.set('ratings', state.rating);
+    renderStars();
+  }
+  else if (e.key === '0' && sel && !e.ctrlKey && !e.altKey) {
+    e.preventDefault();
+    state.rating[sel.path] = 0;
+    store.set('ratings', state.rating);
+    renderStars();
+  }
+  else if ((e.key === '+' || e.key === '=') && !e.ctrlKey && sel) {
+    e.preventDefault();
+    zoomByFactor(1.25);
+  }
+  else if ((e.key === '-' || e.key === '_') && !e.ctrlKey && sel) {
+    e.preventDefault();
+    zoomByFactor(0.8);
+  }
+  else if (e.key === 'Backspace' && !e.ctrlKey && sel) {
+    e.preventDefault();
+    fitToScreen();
+  }
   else if (e.ctrlKey && e.key.toLowerCase() === 'c' && sel) { e.preventDefault(); copyItem(sel); }
   else if (e.ctrlKey && e.key.toLowerCase() === 'v') { e.preventDefault(); pasteHere(sel?.isDir ? sel.path : state.dir); }
   else if (e.key === 'F2' && sel) { e.preventDefault(); renameItem(sel); }
   else if (e.key === 'Delete' && sel) { e.preventDefault(); deleteItem(sel); }
-  else if (e.key === 'F5' && state.dir) { e.preventDefault(); openDir(state.dir); }
+  else if (e.key === 'F5' && state.dir) { e.preventDefault(); openDir(state.dir, false); }
   else if (e.altKey && e.key === 'Enter' && sel) { e.preventDefault(); showPropsDialog(sel); }
   else if (e.key === 'Enter' && sel) { e.preventDefault(); sel.isDir ? openDir(sel.path) : api.open(sel.path); }
 });

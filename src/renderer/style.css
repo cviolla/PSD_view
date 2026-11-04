@@ -310,6 +310,45 @@ body.dark .search-icon {
   outline: none;
 }
 
+.search-scope-pill {
+  display: inline-flex;
+  align-items: center;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px;
+  gap: 2px;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+
+.scope-btn {
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  padding: 2px 7.5px;
+  font-size: 10.5px;
+  font-family: inherit;
+  font-weight: 400;
+  color: var(--muted);
+  cursor: pointer;
+  line-height: 1.3;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.scope-btn:hover {
+  color: var(--text);
+}
+
+.scope-btn.active {
+  background: var(--sel-bg);
+  border: 1px solid var(--sel-border);
+  color: var(--text);
+  font-weight: 500;
+  box-shadow: 0 0 6px rgba(228, 255, 0, 0.2);
+}
+
 /* ---------- Grupos de Navegação (Sistema, Discos, Favoritos) ---------- */
 .group {
   margin-bottom: 5px;
@@ -708,6 +747,40 @@ body.dark .storage-icon {
 
 #stage.dragging {
   cursor: grabbing;
+}
+
+#stage.space-pan {
+  cursor: grab !important;
+}
+
+#stage.space-pan:active,
+#stage.space-pan.dragging {
+  cursor: grabbing !important;
+}
+
+.preview-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 300;
+  user-select: none;
+}
+
+.preview-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(228, 255, 0, 0.2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: psd-spin 0.75s linear infinite;
+}
+
+@keyframes psd-spin {
+  to { transform: rotate(360deg); }
 }
 
 /* Enquadramento proporcional perfeito com contraste de transparência */
@@ -1282,11 +1355,11 @@ body.dark #watermark img {
 #filters button {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10.8px;
   text-align: left;
-  font-size: 18px; /* -10% */
+  font-size: 16.2px; /* -10% */
   font-weight: 300; /* Gilroy Light */
-  padding: 7.5px 12px;
+  padding: 6.8px 11px;
   border-radius: 11px;
   border: 1px solid transparent;
   color: var(--text);
@@ -1294,8 +1367,8 @@ body.dark #watermark img {
 }
 
 .filter-icon {
-  width: 18px; /* -10% */
-  height: 18px; /* -10% */
+  width: 16.2px; /* -10% */
+  height: 16.2px; /* -10% */
   object-fit: contain;
 }
 
@@ -1356,6 +1429,7 @@ body.dark .filter-icon {
   display: block;
 }
 
+.nav-dir-btn,
 #btn-up {
   width: 25px; /* -10% */
   height: 25px; /* -10% */
@@ -1365,9 +1439,23 @@ body.dark .filter-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12.5px; /* -10% */
+  font-size: 11px;
   font-weight: 600;
-  transition: border-color 0.15s;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.nav-dir-btn:hover:not(:disabled),
+#btn-up:hover {
+  background: var(--hover);
+  border-color: var(--sel-border);
+}
+
+.nav-dir-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 #btn-up:hover {
@@ -1496,6 +1584,101 @@ body.dark .item-file-icon {
   color: var(--muted);
   font-weight: 300;
   letter-spacing: 0.04em;
+}
+
+/* ---------- Modal Atalhos de Teclado ---------- */
+#shortcuts-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: grid;
+  place-items: center;
+  z-index: 100;
+  backdrop-filter: blur(6px);
+}
+
+.shortcuts-card {
+  background: var(--bg);
+  padding: 24px 28px;
+  border-radius: 18px;
+  min-width: 660px;
+  max-width: 780px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border);
+  position: relative;
+}
+
+.shortcuts-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.shortcuts-head h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+
+.close-x {
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+
+.close-x:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.shortcuts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.shortcuts-col h4 {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--accent);
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 4px;
+}
+
+.shortcut-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 7px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.shortcut-row span {
+  font-weight: 300;
+}
+
+kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  font-size: 10.5px;
+  font-family: inherit;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
 }
 
 .hidden {

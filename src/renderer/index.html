@@ -12,6 +12,7 @@
   <header id="titlebar">
     <div class="brand">
       <img src="../../LOGO.png" alt="PSD VIEW" id="logo" />
+      <button id="btn-shortcuts" class="link" title="Atalhos do teclado (?)">Atalhos</button>
       <button id="btn-about" class="link">Sobre</button>
     </div>
     <div class="win-controls">
@@ -34,7 +35,11 @@
     <aside id="nav" class="panel">
       <div class="search-box">
         <img src="../../icons/Search.png" alt="Buscar" class="search-icon" />
-        <input id="search" type="search" placeholder="Buscar em todo o computador" />
+        <input id="search" type="search" placeholder="Buscar nesta pasta..." />
+        <div class="search-scope-pill" id="search-scope" role="group" aria-label="Escopo da busca">
+          <button type="button" class="scope-btn active" data-scope="folder" title="Buscar nesta pasta e subpastas">Pasta</button>
+          <button type="button" class="scope-btn" data-scope="global" title="Buscar em todo o computador">PC</button>
+        </div>
       </div>
 
       <div class="group" data-group="sistema">
@@ -171,7 +176,9 @@
         <button id="toggle-view" class="view-toggle-btn" title="Modo de exibição: Múltiplas Colunas (clique para Lista linear)" aria-label="Alternar exibição">
           <img id="toggle-view-img" src="../../icons/ON.png" alt="Alternar exibição" class="toggle-view-icon" />
         </button>
-        <button id="btn-up" title="Subir um nível">↑</button>
+        <button id="btn-back" class="nav-dir-btn" title="Voltar (Alt + ←)" disabled>◀</button>
+        <button id="btn-forward" class="nav-dir-btn" title="Avançar (Alt + →)" disabled>▶</button>
+        <button id="btn-up" class="nav-dir-btn" title="Subir um nível (Alt + ↑)">↑</button>
         <span id="crumb"></span>
         <span id="count"></span>
       </div>
@@ -197,8 +204,50 @@
   <div id="about" class="hidden">
     <div class="card">
       <img src="../../ISO2.png" alt="PSD VIEW" id="about-logo" />
-      <p>PSD VIEW - Versão 0.1.1<br>Explorador de Arquivos by @cviolla</p>
+      <p>PSD VIEW - Versão 0.1.2<br>Explorador de Arquivos by @cviolla</p>
       <span class="about-esc">ESC pra sair</span>
+    </div>
+  </div>
+
+  <div id="shortcuts-modal" class="hidden" role="dialog" aria-modal="true">
+    <div class="card shortcuts-card">
+      <div class="shortcuts-head">
+        <h3>Atalhos de Teclado</h3>
+        <button id="btn-shortcuts-close" class="close-x" title="Fechar">✕</button>
+      </div>
+      <div class="shortcuts-grid">
+        <div class="shortcuts-col">
+          <h4>Navegação</h4>
+          <div class="shortcut-row"><kbd>Alt</kbd> + <kbd>←</kbd><span>Voltar pasta</span></div>
+          <div class="shortcut-row"><kbd>Alt</kbd> + <kbd>→</kbd><span>Avançar pasta</span></div>
+          <div class="shortcut-row"><kbd>Alt</kbd> + <kbd>↑</kbd><span>Subir nível</span></div>
+          <div class="shortcut-row"><kbd>Ctrl</kbd> + <kbd>F</kbd><span>Buscar arquivos</span></div>
+          <div class="shortcut-row"><kbd>F5</kbd><span>Atualizar pasta</span></div>
+          <div class="shortcut-row"><kbd>Enter</kbd><span>Abrir pasta / arquivo</span></div>
+          <div class="shortcut-row"><kbd>2x Clique</kbd><span>Abrir no programa padrão</span></div>
+        </div>
+        <div class="shortcuts-col">
+          <h4>Visualizador & Zoom</h4>
+          <div class="shortcut-row"><kbd>Ctrl</kbd> + <kbd>Roda</kbd><span>Zoom no cursor</span></div>
+          <div class="shortcut-row"><kbd>Espaço</kbd> + <kbd>Arrastar</kbd><span>Mover imagem (Pan)</span></div>
+          <div class="shortcut-row"><kbd>+</kbd> / <kbd>-</kbd><span>Aumentar / Diminuir zoom</span></div>
+          <div class="shortcut-row"><kbd>0</kbd> / <kbd>Backspace</kbd><span>Ajustar à tela</span></div>
+          <div class="shortcut-row"><kbd>R</kbd><span>Girar 90°</span></div>
+          <div class="shortcut-row"><kbd>F11</kbd><span>Tela cheia</span></div>
+          <div class="shortcut-row"><kbd>←</kbd> / <kbd>→</kbd><span>Item anterior / próximo</span></div>
+        </div>
+        <div class="shortcuts-col">
+          <h4>Ações & Classificação</h4>
+          <div class="shortcut-row"><kbd>1</kbd> - <kbd>5</kbd><span>Classificar estrelas</span></div>
+          <div class="shortcut-row"><kbd>0</kbd><span>Remover estrelas</span></div>
+          <div class="shortcut-row"><kbd>F2</kbd><span>Renomear item</span></div>
+          <div class="shortcut-row"><kbd>Delete</kbd><span>Mover para a Lixeira</span></div>
+          <div class="shortcut-row"><kbd>Ctrl</kbd> + <kbd>C</kbd> / <kbd>V</kbd><span>Copiar / Colar</span></div>
+          <div class="shortcut-row"><kbd>Alt</kbd> + <kbd>Enter</kbd><span>Propriedades</span></div>
+          <div class="shortcut-row"><kbd>?</kbd><span>Abrir estes atalhos</span></div>
+        </div>
+      </div>
+      <span class="about-esc">ESC para fechar</span>
     </div>
   </div>
 
